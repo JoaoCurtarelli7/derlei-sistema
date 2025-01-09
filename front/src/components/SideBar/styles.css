@@ -1,0 +1,56 @@
+.sidebar-custom {
+  background-color: #343a40 !important;
+  color: white;
+}
+
+/* Remove a linha debaixo do link no menu */
+.sidebar-custom .ant-menu-item a {
+  text-decoration: none !important; /* Remove o underline */
+}
+
+/* Remove o underline quando o link está em foco */
+.sidebar-custom .ant-menu-item a:focus {
+  text-decoration: none !important;
+}
+
+/* Remove o underline ao passar o mouse sobre o link */
+.sidebar-custom .ant-menu-item a:hover {
+  text-decoration: none !important;
+}
+
+/* Remove o underline quando o link está ativo (selecionado) */
+.sidebar-custom .ant-menu-item-selected a {
+  text-decoration: none !important;
+}
+
+.sidebar-custom .pro-menu-item {
+  padding: 10px 15px;
+  font-size: 16px;
+  border-radius: 5px;
+  margin: 5px 0;
+  transition: background-color 0.3s;
+}
+
+.sidebar-custom .pro-menu-item:hover {
+  background-color: #495057;
+}
+
+.sidebar-custom .pro-menu-item.active {
+  background-color: #007bff;
+  color: white;
+}
+
+.sidebar-custom .pro-menu-item .pro-icon-wrapper {
+  color: white;
+}
+
+.menu-toggle {
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.content {
+  background-color: #f8f9fa;
+  flex: 1;
+  overflow: auto;
+}

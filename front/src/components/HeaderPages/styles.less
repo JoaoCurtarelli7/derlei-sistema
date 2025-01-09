@@ -1,0 +1,56 @@
+.header2 {
+  background-color: #f0f0f0;
+  padding: 10px;
+  border-bottom: 2px solid #609fff;
+  margin-bottom: 20px;
+  margin-top: -10px;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.3s ease;
+}
+
+.logo-container {
+  width: 130px;
+  display: flex;
+  align-items: center;
+  animation: fadeIn 1s ease-in-out;
+}
+
+.logo-image {
+  height: 40px;
+}
+
+.subtitle-logo {
+  font-size: 20px;
+  font-weight: bold;
+  color: #0066ff;
+  margin-left: 15px;
+  transition: color 0.3s;
+}
+
+.nav-menu {
+  margin-right: 16px;
+}
+
+.nav-menu a {
+  color: #0066ff;
+  text-decoration: none;
+  font-weight: bold;
+  transition: color 0.3s, transform 0.3s;
+}
+
+.nav-menu a:hover {
+  color: #609fff;
+  transform: scale(1.1);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
