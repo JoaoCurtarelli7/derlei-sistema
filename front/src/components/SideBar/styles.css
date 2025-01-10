@@ -1,56 +1,44 @@
-.sidebar-custom {
-  background-color: #343a40 !important;
+/* Layout Geral */
+.layout {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Sidebar Customizada */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 280px;
+  height: 100vh;
+  background-color: #343a40;
   color: white;
+  overflow-y: auto; /* Permite rolagem se necessário */
+  padding: 20px 10px;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
 }
 
-/* Remove a linha debaixo do link no menu */
-.sidebar-custom .ant-menu-item a {
-  text-decoration: none !important; /* Remove o underline */
-}
-
-/* Remove o underline quando o link está em foco */
-.sidebar-custom .ant-menu-item a:focus {
-  text-decoration: none !important;
-}
-
-/* Remove o underline ao passar o mouse sobre o link */
-.sidebar-custom .ant-menu-item a:hover {
-  text-decoration: none !important;
-}
-
-/* Remove o underline quando o link está ativo (selecionado) */
-.sidebar-custom .ant-menu-item-selected a {
-  text-decoration: none !important;
-}
-
-.sidebar-custom .pro-menu-item {
-  padding: 10px 15px;
-  font-size: 16px;
-  border-radius: 5px;
-  margin: 5px 0;
-  transition: background-color 0.3s;
-}
-
-.sidebar-custom .pro-menu-item:hover {
-  background-color: #495057;
-}
-
-.sidebar-custom .pro-menu-item.active {
-  background-color: #007bff;
-  color: white;
-}
-
-.sidebar-custom .pro-menu-item .pro-icon-wrapper {
-  color: white;
-}
-
-.menu-toggle {
+.sidebar-title {
+  display: flex;
+  align-items: center;
+  font-size: 1.5rem;
   font-weight: bold;
-  text-transform: uppercase;
+  margin-bottom: 20px;
+  color: white;
+  text-decoration: none;
 }
 
+.sidebar .ant-menu-item-selected a {
+  background-color: #495057 !important;
+  border-radius: 5px;
+}
+
+/* Conteúdo Principal */
 .content {
-  background-color: #f8f9fa;
+  margin-left: 280px; /* Espaço igual à largura da sidebar */
   flex: 1;
-  overflow: auto;
+  padding: 20px;
+  overflow-y: auto; /* Permite rolagem no conteúdo principal */
+  background-color: #f8f9fa;
 }

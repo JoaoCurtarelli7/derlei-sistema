@@ -7,7 +7,7 @@ import {
   FaBoxes,
   FaUser,
 } from 'react-icons/fa'
-import SubMenu from 'antd/es/menu/SubMenu'
+import { FaCompassDrafting } from 'react-icons/fa6'
 
 export default function AppSidebar() {
   return (
@@ -24,31 +24,52 @@ export default function AppSidebar() {
         </Link>
         <hr />
 
-        <Menu mode="vertical" className="bg-dark text-white" theme="dark">
+        <Menu
+          mode="vertical"
+          className="bg-dark text-white"
+          theme="dark"
+          style={{ border: 'none' }}
+        >
           <Menu.Item key="/" icon={<FaHome className="me-2" />}>
-            <Link to="/">Home</Link>
-
-            <SubMenu key="sub1" title="Submenu">
-              <Menu.Item key="1">Option 1</Menu.Item>
-              <Menu.Item key="2">Option 2</Menu.Item>
-              <Menu.Item key="3">Option 3</Menu.Item>
-            </SubMenu>
+            <Link to="/" className="text-decoration-none">
+              Home
+            </Link>
           </Menu.Item>
 
           <Menu.Item key="/closing" icon={<FaTachometerAlt className="me-2" />}>
-            <Link to="/closing">Fechamento</Link>
+            <Link to="/closing" className="text-decoration-none">
+              Fechamento
+            </Link>
           </Menu.Item>
 
           <Menu.Item key="/load" icon={<FaShoppingCart className="me-2" />}>
-            <Link to="/load">Carga/Pedidos</Link>
+            <Link to="/load" className="text-decoration-none">
+              Carga/Pedidos
+            </Link>
           </Menu.Item>
 
-          <Menu.Item key="/" icon={<FaBoxes className="me-2" />}>
-            <Link to="/">Salario</Link>
+          <Menu.Item key="/employee" icon={<FaBoxes className="me-2" />}>
+            <Link to="/employee" className="text-decoration-none">
+              Funcionário
+            </Link>
           </Menu.Item>
 
-          <Menu.Item key="/" icon={<FaUser className="me-2" />}>
-            <Link to="/">Manutenção</Link>
+          <Menu.Item
+            key="/vehicle-maintenance"
+            icon={<FaUser className="me-2" />}
+          >
+            <Link to="/vehicle-maintenance" className="text-decoration-none">
+              Manutenção Veículos
+            </Link>
+          </Menu.Item>
+
+          <Menu.Item
+            key="/companies"
+            icon={<FaCompassDrafting className="me-2" />}
+          >
+            <Link to="/companies" className="text-decoration-none">
+              Empresas
+            </Link>
           </Menu.Item>
         </Menu>
 

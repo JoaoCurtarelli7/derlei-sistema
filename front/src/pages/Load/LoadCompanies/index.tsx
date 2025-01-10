@@ -23,7 +23,7 @@ const companies = [
   },
 ]
 
-export default function Companies() {
+export default function LoadCompanies() {
   const navigate = useNavigate()
 
   const handleCardClick = (id) => {

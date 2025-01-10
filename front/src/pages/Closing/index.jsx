@@ -39,48 +39,51 @@ export default function Closing() {
   ]
 
   return (
-    <Row gutter={[16, 16]}>
-      <Col span={12}>
-        <Card title="Entradas" bordered>
-          <Table
-            dataSource={entradas}
-            columns={colunasEntradas}
-            pagination={false}
-            size="small"
-          />
-        </Card>
-      </Col>
+    <Card style={{ margin: '20px', padding: '20px' }} bordered>
+      <h1>Fechamentos</h1>
+      <Row gutter={[16, 16]}>
+        <Col span={12}>
+          <Card title="Entradas" bordered>
+            <Table
+              dataSource={entradas}
+              columns={colunasEntradas}
+              pagination={false}
+              size="small"
+            />
+          </Card>
+        </Col>
 
-      {/* Saídas */}
-      <Col span={12}>
-        <Card title="Saídas" bordered>
-          <Table
-            dataSource={saidas}
-            columns={colunasSaidas}
-            pagination={false}
-            size="small"
-          />
-        </Card>
-      </Col>
+        {/* Saídas */}
+        <Col span={12}>
+          <Card title="Saídas" bordered>
+            <Table
+              dataSource={saidas}
+              columns={colunasSaidas}
+              pagination={false}
+              size="small"
+            />
+          </Card>
+        </Col>
 
-      {/* Totais e Impostos */}
-      <Col span={12}>
-        <Card title="Totais" bordered>
-          <Title level={4}>Total Saídas: R$ 37.772,00</Title>
-          <Title level={4}>Total Entradas: R$ 15.000,00</Title>
-        </Card>
-      </Col>
+        {/* Totais e Impostos */}
+        <Col span={12}>
+          <Card title="Totais" bordered>
+            <Title level={4}>Total Saídas: R$ 37.772,00</Title>
+            <Title level={4}>Total Entradas: R$ 15.000,00</Title>
+          </Card>
+        </Col>
 
-      <Col span={12}>
-        <Card title="Impostos" bordered>
-          <Table
-            dataSource={impostos}
-            columns={colunasImpostos}
-            pagination={false}
-            size="small"
-          />
-        </Card>
-      </Col>
-    </Row>
+        <Col span={12}>
+          <Card title="Impostos" bordered>
+            <Table
+              dataSource={impostos}
+              columns={colunasImpostos}
+              pagination={false}
+              size="small"
+            />
+          </Card>
+        </Col>
+      </Row>
+    </Card>
   )
 }

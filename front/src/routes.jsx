@@ -3,7 +3,12 @@ import Layout from './components/Layout'
 import Home from './pages/Home'
 import Closing from './pages/Closing'
 import Load from './pages/Load'
-import Companies from './pages/Load/Companies'
+import LoadCompanies from './pages/Load/LoadCompanies'
+import CompanyList from './pages/Companies'
+import EmployeeList from './pages/Employee'
+import EmployeeDetails from './pages/Employee/Details'
+import VehicleList from './pages/Vehicle'
+import VehicleMaintenance from './pages/Vehicle/Maintenance'
 
 const router = createBrowserRouter([
   {
@@ -17,11 +22,31 @@ const router = createBrowserRouter([
       },
       {
         path: '/load',
-        element: <Companies />,
+        element: <LoadCompanies />,
       },
       {
         path: '/load/:id',
         element: <Load />,
+      },
+      {
+        path: '/companies',
+        element: <CompanyList />,
+      },
+      {
+        path: '/employee',
+        element: <EmployeeList />,
+      },
+      {
+        path: '/employee/:id',
+        element: <EmployeeDetails />,
+      },
+      {
+        path: '/vehicle-maintenance',
+        element: <VehicleList />,
+      },
+      {
+        path: '/vehicle-maintenance/:id',
+        element: <VehicleMaintenance />,
       },
     ],
   },
