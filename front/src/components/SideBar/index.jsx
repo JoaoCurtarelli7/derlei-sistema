@@ -1,13 +1,9 @@
-import { Menu } from 'antd'
-import { Link } from 'react-router-dom'
-import {
-  FaHome,
-  FaTachometerAlt,
-  FaShoppingCart,
-  FaBoxes,
-  FaUser,
-} from 'react-icons/fa'
-import { FaCompassDrafting } from 'react-icons/fa6'
+import React from 'react';
+import { Menu } from 'antd';
+import { Link } from 'react-router-dom';
+import { FaHome, FaTachometerAlt, FaShoppingCart, FaBoxes, FaUser } from 'react-icons/fa';
+import { FaCompassDrafting } from 'react-icons/fa6';
+import Dropdown from 'react-bootstrap/Dropdown';
 
 export default function AppSidebar() {
   return (
@@ -75,13 +71,10 @@ export default function AppSidebar() {
 
         <hr />
 
-        <div className="dropdown">
-          <a
-            href="#"
-            className="d-flex align-items-center text-white text-decoration-none dropdown-toggle"
-            id="dropdownUser1"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
+        <Dropdown>
+          <Dropdown.Toggle
+            id="dropdown-user"
+            className="d-flex align-items-center text-white bg-dark border-0"
           >
             <img
               src="https://via.placeholder.com/32"
@@ -91,33 +84,16 @@ export default function AppSidebar() {
               className="rounded-circle me-2"
             />
             <strong>mdo</strong>
-          </a>
+          </Dropdown.Toggle>
 
-          <ul
-            className="dropdown-menu dropdown-menu-dark text-small shadow"
-            aria-labelledby="dropdownUser1"
-          >
-            <li>
-              <a className="dropdown-item" href="#">
-                Profile
-              </a>
-            </li>
-            <li>
-              <a className="dropdown-item" href="#">
-                Settings
-              </a>
-            </li>
-            <li>
-              <hr className="dropdown-divider" />
-            </li>
-            <li>
-              <a className="dropdown-item" href="#">
-                Sign out
-              </a>
-            </li>
-          </ul>
-        </div>
+          <Dropdown.Menu variant="dark">
+            <Dropdown.Item href="/user-profile">Profile</Dropdown.Item>
+            <Dropdown.Item href="#">Settings</Dropdown.Item>
+            <Dropdown.Divider />
+            <Dropdown.Item href="#">Sign out</Dropdown.Item>
+          </Dropdown.Menu>
+        </Dropdown>
       </nav>
     </div>
-  )
+  );
 }

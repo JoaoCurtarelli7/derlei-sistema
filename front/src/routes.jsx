@@ -9,6 +9,8 @@ import EmployeeList from './pages/Employee'
 import EmployeeDetails from './pages/Employee/Details'
 import VehicleList from './pages/Vehicle'
 import VehicleMaintenance from './pages/Vehicle/Maintenance'
+import Login from './pages/Login'
+import UserProfile from './pages/UserProfile'
 
 const router = createBrowserRouter([
   {
@@ -48,6 +50,14 @@ const router = createBrowserRouter([
         path: '/vehicle-maintenance/:id',
         element: <VehicleMaintenance />,
       },
+      {
+        path: '/login',
+        element: <Login />,
+      },
+      {
+        path: '/user-profile',
+        element: <UserProfile />,
+      }
     ],
   },
 ])
