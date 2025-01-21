@@ -1,18 +1,22 @@
-import React from 'react';
-import { Modal, Form, Input, InputNumber } from 'antd';
+import React from 'react'
+import { Modal, Form, Input, InputNumber } from 'antd'
 
-export default function VehicleMaintenanceModal({ visible, onCancel, onAddMaintenance }) {
-  const [form] = Form.useForm();
+export default function VehicleMaintenanceModal({
+  visible,
+  onCancel,
+  onAddMaintenance,
+}) {
+  const [form] = Form.useForm()
 
   const handleOk = () => {
     form
       .validateFields()
       .then((values) => {
-        onAddMaintenance(values);
-        form.resetFields();
+        onAddMaintenance(values)
+        form.resetFields()
       })
-      .catch((info) => console.log('Validate Failed:', info));
-  };
+      .catch((info) => console.log('Validate Failed:', info))
+  }
 
   return (
     <Modal
@@ -27,14 +31,24 @@ export default function VehicleMaintenanceModal({ visible, onCancel, onAddMainte
         <Form.Item
           name="data"
           label="Data"
-          rules={[{ required: true, message: 'Por favor, insira a data da manutenção' }]}
+          rules={[
+            {
+              required: true,
+              message: 'Por favor, insira a data da manutenção',
+            },
+          ]}
         >
           <Input />
         </Form.Item>
         <Form.Item
           name="servico"
           label="Serviço Realizado"
-          rules={[{ required: true, message: 'Por favor, insira o serviço realizado' }]}
+          rules={[
+            {
+              required: true,
+              message: 'Por favor, insira o serviço realizado',
+            },
+          ]}
         >
           <Input />
         </Form.Item>
@@ -60,5 +74,5 @@ export default function VehicleMaintenanceModal({ visible, onCancel, onAddMainte
         </Form.Item>
       </Form>
     </Modal>
-  );
+  )
 }

@@ -1,0 +1,31 @@
+.custom-card {
+  border-radius: 8px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.custom-card.entradas {
+  background-color: #e8f5e9; /* Verde claro */
+}
+
+.custom-card.saidas {
+  background-color: #ffebee; /* Vermelho claro */
+}
+
+.custom-card.impostos {
+  background-color: #e3f2fd; /* Azul claro */
+}
+
+.custom-card.totais {
+  background-color: #fff8e1; /* Amarelo claro */
+}
+
+.totais-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ant-card-title {
+  font-size: 18px;
+  font-weight: bold;
+}

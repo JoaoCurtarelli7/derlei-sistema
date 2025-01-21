@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { Card, Button, Row, Col, message } from 'antd';
-import { useNavigate } from 'react-router-dom';
-import AddVehicleModal from '../../components/Modal/Vehicle';
+import React, { useState } from 'react'
+import { Card, Button, Row, Col, message } from 'antd'
+import { useNavigate } from 'react-router-dom'
+import AddVehicleModal from '../../components/Modal/Vehicle'
 
 export default function VehicleList() {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
   const [data, setData] = useState([
     {
       key: '1',
@@ -26,27 +26,35 @@ export default function VehicleList() {
       renavam: '2098765432',
       imagem: 'https://via.placeholder.com/150?text=Volvo+CAM',
     },
-  ]);
+  ])
 
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false)
 
   const handleAddVehicle = (values) => {
     const newVehicle = {
       key: Date.now().toString(),
       ...values,
-      imagem: values.imagem?.file?.response?.url || 'https://via.placeholder.com/150?text=Novo+Caminhao',
-    };
-    setData((prevData) => [...prevData, newVehicle]);
-    setIsModalVisible(false);
-    message.success('Caminhão adicionado com sucesso!');
-  };
+      imagem:
+        values.imagem?.file?.response?.url ||
+        'https://via.placeholder.com/150?text=Novo+Caminhao',
+    }
+    setData((prevData) => [...prevData, newVehicle])
+    setIsModalVisible(false)
+    message.success('Caminhão adicionado com sucesso!')
+  }
 
   return (
     <Card style={{ margin: '20px', padding: '20px' }} bordered>
       <h1>Lista de Caminhões</h1>
-      <Button type="primary" style={{ marginBottom: 16 }} onClick={() => setIsModalVisible(true)}>
+
+      <Button
+        type="primary"
+        style={{ marginBottom: 16 }}
+        onClick={() => setIsModalVisible(true)}
+      >
         Adicionar Caminhão
       </Button>
+
       <Row gutter={[16, 16]}>
         {data.map((vehicle) => (
           <Col xs={24} sm={12} md={8} lg={6} key={vehicle.key}>
@@ -62,9 +70,20 @@ export default function VehicleList() {
                 <Button
                   type="link"
                   key={vehicle.key}
-                  onClick={() => navigate(`/vehicle-maintenance/${vehicle.key}`)}
+                  onClick={() =>
+                    navigate(`/vehicle-maintenance/${vehicle.key}`)
+                  }
                 >
                   Manutenção
+                </Button>,
+                <Button
+                  type="link"
+                  key={vehicle.key}
+                  onClick={() =>
+                    navigate(`/vehicle-maintenance/${vehicle.key}`)
+                  }
+                >
+                  Viagens
                 </Button>,
               ]}
             >
@@ -90,5 +109,5 @@ export default function VehicleList() {
         onSubmit={handleAddVehicle}
       />
     </Card>
-  );
+  )
 }

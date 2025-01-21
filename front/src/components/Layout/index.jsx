@@ -9,15 +9,16 @@ export default function AppLayout() {
 
   return (
     <div className="d-flex">
-      {!isLoginPage ?(
+      {!isLoginPage ? (
         <>
           <AppSidebar />
           <div className="flex-grow-1" style={{ padding: '20px' }}>
             <Outlet />
           </div>
         </>
-      ) :(
-       <Outlet />)} 
+      ) : (
+        <Outlet />
+      )}
     </div>
   )
 }

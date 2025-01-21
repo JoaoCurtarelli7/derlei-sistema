@@ -1,24 +1,30 @@
-import React from 'react';
-import { Modal, Form, Input } from 'antd';
+import React from 'react'
+import { Modal, Form, Input } from 'antd'
 
-export default function CustomModal({ isVisible, onClose, onSubmit, title, type }) {
-  const [form] = Form.useForm();
+export default function CustomModal({
+  isVisible,
+  onClose,
+  onSubmit,
+  title,
+  type,
+}) {
+  const [form] = Form.useForm()
 
   const handleOk = () => {
     form
       .validateFields()
       .then((values) => {
-        onSubmit(values);
-        form.resetFields();
-        onClose();
+        onSubmit(values)
+        form.resetFields()
+        onClose()
       })
-      .catch((info) => console.error('Validation failed:', info));
-  };
+      .catch((info) => console.error('Validation failed:', info))
+  }
 
   const handleCancel = () => {
-    form.resetFields();
-    onClose();
-  };
+    form.resetFields()
+    onClose()
+  }
 
   return (
     <Modal
@@ -35,14 +41,18 @@ export default function CustomModal({ isVisible, onClose, onSubmit, title, type 
             <Form.Item
               name="descricao"
               label="Descrição"
-              rules={[{ required: true, message: 'Por favor, insira a descrição.' }]}
+              rules={[
+                { required: true, message: 'Por favor, insira a descrição.' },
+              ]}
             >
               <Input />
             </Form.Item>
             <Form.Item
               name="valor"
               label="Valor"
-              rules={[{ required: true, message: 'Por favor, insira o valor.' }]}
+              rules={[
+                { required: true, message: 'Por favor, insira o valor.' },
+              ]}
             >
               <Input />
             </Form.Item>
@@ -54,14 +64,18 @@ export default function CustomModal({ isVisible, onClose, onSubmit, title, type 
             <Form.Item
               name="descricao"
               label="Descrição"
-              rules={[{ required: true, message: 'Por favor, insira a descrição.' }]}
+              rules={[
+                { required: true, message: 'Por favor, insira a descrição.' },
+              ]}
             >
               <Input />
             </Form.Item>
             <Form.Item
               name="valor"
               label="Despesa"
-              rules={[{ required: true, message: 'Por favor, insira a despesa.' }]}
+              rules={[
+                { required: true, message: 'Por favor, insira a despesa.' },
+              ]}
             >
               <Input />
             </Form.Item>
@@ -73,14 +87,21 @@ export default function CustomModal({ isVisible, onClose, onSubmit, title, type 
             <Form.Item
               name="nome"
               label="Nome do Imposto"
-              rules={[{ required: true, message: 'Por favor, insira o nome do imposto.' }]}
+              rules={[
+                {
+                  required: true,
+                  message: 'Por favor, insira o nome do imposto.',
+                },
+              ]}
             >
               <Input />
             </Form.Item>
             <Form.Item
               name="valor"
               label="Valor"
-              rules={[{ required: true, message: 'Por favor, insira o valor.' }]}
+              rules={[
+                { required: true, message: 'Por favor, insira o valor.' },
+              ]}
             >
               <Input />
             </Form.Item>
@@ -88,5 +109,5 @@ export default function CustomModal({ isVisible, onClose, onSubmit, title, type 
         )}
       </Form>
     </Modal>
-  );
+  )
 }

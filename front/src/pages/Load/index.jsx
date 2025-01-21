@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { Card, Table, Button } from 'antd';
-import { useParams } from 'react-router-dom';
-import CustomModalLoad from '../../components/Modal/Load';
+import React, { useEffect, useState } from 'react'
+import { Card, Table, Button } from 'antd'
+import { useParams } from 'react-router-dom'
+import * as XLSX from 'xlsx'
+import CustomModalLoad from '../../components/Modal/Load'
 
 export default function Load() {
-  const { id } = useParams();
-  const [data, setData] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { id } = useParams()
+  const [data, setData] = useState([])
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   useEffect(() => {
     const companyData = [
@@ -34,9 +35,9 @@ export default function Load() {
         fechamentos: 'R$ 0,00',
         observacoes: '',
       },
-    ];
-    setData(companyData);
-  }, [id]);
+    ]
+    setData(companyData)
+  }, [id])
 
   const handleAddLoad = (newLoad) => {
     const newData = {
@@ -46,35 +47,113 @@ export default function Load() {
       frete4: `R$ ${newLoad.frete4.toFixed(2).replace('.', ',')}`,
       somaTotalFrete: `R$ ${newLoad.somaTotalFrete.toFixed(2).replace('.', ',')}`,
       fechamentos: `R$ ${newLoad.fechamentos.toFixed(2).replace('.', ',')}`,
-    };
-    setData((prev) => [...prev, newData]);
-    setIsModalOpen(false);
-  };
+    }
+    setData((prev) => [...prev, newData])
+    setIsModalOpen(false)
+  }
 
   const columns = [
     { title: 'Data', dataIndex: 'data', key: 'data', align: 'center' },
-    { title: 'Número do Carregamento', dataIndex: 'numeroCarregamento', key: 'numeroCarregamento', align: 'center' },
-    { title: 'Quantidade de Entregas', dataIndex: 'entregas', key: 'entregas', align: 'center' },
-    { title: 'Peso da Carga', dataIndex: 'pesoCarga', key: 'pesoCarga', align: 'center' },
-    { title: 'Valor Total', dataIndex: 'valorTotal', key: 'valorTotal', align: 'right' },
-    { title: 'Valor do Frete 4%', dataIndex: 'frete4', key: 'frete4', align: 'right' },
-    { title: 'Soma Total Frete', dataIndex: 'somaTotalFrete', key: 'somaTotalFrete', align: 'right' },
-    { title: 'Fechamentos', dataIndex: 'fechamentos', key: 'fechamentos', align: 'right' },
-    { title: 'Observações', dataIndex: 'observacoes', key: 'observacoes', align: 'left' },
-  ];
+    {
+      title: 'Número do Carregamento',
+      dataIndex: 'numeroCarregamento',
+      key: 'numeroCarregamento',
+      align: 'center',
+    },
+    {
+      title: 'Quantidade de Entregas',
+      dataIndex: 'entregas',
+      key: 'entregas',
+      align: 'center',
+    },
+    {
+      title: 'Peso da Carga',
+      dataIndex: 'pesoCarga',
+      key: 'pesoCarga',
+      align: 'center',
+    },
+    {
+      title: 'Valor Total',
+      dataIndex: 'valorTotal',
+      key: 'valorTotal',
+      align: 'right',
+    },
+    {
+      title: 'Valor do Frete 4%',
+      dataIndex: 'frete4',
+      key: 'frete4',
+      align: 'right',
+    },
+    {
+      title: 'Soma Total Frete',
+      dataIndex: 'somaTotalFrete',
+      key: 'somaTotalFrete',
+      align: 'right',
+    },
+    {
+      title: 'Fechamentos',
+      dataIndex: 'fechamentos',
+      key: 'fechamentos',
+      align: 'right',
+    },
+    {
+      title: 'Observações',
+      dataIndex: 'observacoes',
+      key: 'observacoes',
+      align: 'left',
+    },
+  ]
+
+  const exportToExcel = () => {
+    const wb = XLSX.utils.book_new()
+
+    const headerData = [[`NOME DA EMPRESA ${id}`], []]
+
+    const titles = columns.map((col) => col.title)
+    headerData.push(titles)
+
+    const tableData = data.map((item) => {
+      return columns.map((col) => item[col.dataIndex] || '')
+    })
+
+    const finalData = [...headerData, ...tableData]
+
+    const ws = XLSX.utils.aoa_to_sheet(finalData)
+    XLSX.utils.book_append_sheet(wb, ws, 'Tabela')
+
+    ws.A1.s = { font: { bold: true, sz: 16 } }
+
+    XLSX.writeFile(wb, `Tabela_Empresa_${id}.xlsx`)
+  }
 
   const calculateTotalFreight = () => {
     return data
-      .map((item) => parseFloat(item.somaTotalFrete.replace(/[^\d,]/g, '').replace(',', '.')))
-      .reduce((sum, value) => sum + value, 0);
-  };
+      .map((item) =>
+        parseFloat(
+          item.somaTotalFrete.replace(/[^\d,]/g, '').replace(',', '.'),
+        ),
+      )
+      .reduce((sum, value) => sum + value, 0)
+  }
 
   return (
     <Card style={{ margin: '20px', padding: '20px' }} bordered>
       <h1>Tabela da Empresa {id}</h1>
 
-      <Button type="primary" onClick={() => setIsModalOpen(true)} style={{ marginBottom: 16 }}>
+      <Button
+        type="primary"
+        onClick={() => setIsModalOpen(true)}
+        style={{ marginBottom: 16 }}
+      >
         Adicionar Carregamento
+      </Button>
+
+      <Button
+        type="default"
+        onClick={exportToExcel}
+        style={{ marginBottom: 16, marginLeft: 8 }}
+      >
+        Exportar para Excel
       </Button>
 
       <Table
@@ -103,5 +182,5 @@ export default function Load() {
         onSubmit={handleAddLoad}
       />
     </Card>
-  );
+  )
 }
