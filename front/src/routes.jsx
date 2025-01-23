@@ -11,6 +11,7 @@ import VehicleList from './pages/Vehicle'
 import VehicleMaintenance from './pages/Vehicle/Maintenance'
 import Login from './pages/Login'
 import UserProfile from './pages/UserProfile'
+import TripList from './pages/Vehicle/Trip'
 
 const router = createBrowserRouter([
   {
@@ -57,6 +58,14 @@ const router = createBrowserRouter([
       {
         path: '/user-profile',
         element: <UserProfile />,
+      },
+      {
+        path: '/vehicle/trip',
+        element: <TripList />,
+      },
+      {
+        path: '/vehicle/trip-expenses/:id',
+        element: <VehicleMaintenance />,
       },
     ],
   },

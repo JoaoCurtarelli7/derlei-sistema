@@ -1,22 +1,24 @@
-import React from 'react';
-import { Card, Tabs, Button, Input, Form, Typography } from 'antd';
-import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
-import './styles.css';
-import loginImage from '../../components/assets/login.jpg';
+import React from 'react'
+import { Card, Tabs, Button, Input, Form, Typography } from 'antd'
+import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons'
+import './styles.css'
+import loginImage from '../../components/assets/login.jpg'
+import { useNavigate } from 'react-router-dom'
 
-const { Title } = Typography;
+const { Title } = Typography
 
 export default function LoginAndRegister() {
-  const [loginForm] = Form.useForm();
-  const [registerForm] = Form.useForm();
+  const [loginForm] = Form.useForm()
+  const [registerForm] = Form.useForm()
+  const navigate = useNavigate()
 
-  const handleLogin = (values) => {
-    console.log('Login:', values);
-  };
+  const handleLogin = () => {
+    navigate('/')
+  }
 
   const handleRegister = (values) => {
-    console.log('Cadastro:', values);
-  };
+    console.log('Cadastro:', values)
+  }
 
   return (
     <div className="login-container">
@@ -31,22 +33,25 @@ export default function LoginAndRegister() {
               <Title level={3} style={{ textAlign: 'center' }}>
                 Login
               </Title>
-              <Form
-                form={loginForm}
-                onFinish={handleLogin}
-                layout="vertical"
-              >
+              <Form form={loginForm} onFinish={handleLogin} layout="vertical">
                 <Form.Item
                   name="username"
                   label="Usuário"
-                  rules={[{ required: true, message: 'Por favor, insira seu usuário!' }]}
+                  rules={[
+                    {
+                      required: true,
+                      message: 'Por favor, insira seu usuário!',
+                    },
+                  ]}
                 >
                   <Input prefix={<UserOutlined />} placeholder="Usuário" />
                 </Form.Item>
                 <Form.Item
                   name="password"
                   label="Senha"
-                  rules={[{ required: true, message: 'Por favor, insira sua senha!' }]}
+                  rules={[
+                    { required: true, message: 'Por favor, insira sua senha!' },
+                  ]}
                 >
                   <Input.Password
                     prefix={<LockOutlined />}
@@ -74,16 +79,30 @@ export default function LoginAndRegister() {
                 <Form.Item
                   name="name"
                   label="Nome Completo"
-                  rules={[{ required: true, message: 'Por favor, insira seu nome completo!' }]}
+                  rules={[
+                    {
+                      required: true,
+                      message: 'Por favor, insira seu nome completo!',
+                    },
+                  ]}
                 >
-                  <Input prefix={<UserOutlined />} placeholder="Nome Completo" />
+                  <Input
+                    prefix={<UserOutlined />}
+                    placeholder="Nome Completo"
+                  />
                 </Form.Item>
                 <Form.Item
                   name="email"
                   label="E-mail"
                   rules={[
-                    { required: true, message: 'Por favor, insira seu e-mail!' },
-                    { type: 'email', message: 'Por favor, insira um e-mail válido!' },
+                    {
+                      required: true,
+                      message: 'Por favor, insira seu e-mail!',
+                    },
+                    {
+                      type: 'email',
+                      message: 'Por favor, insira um e-mail válido!',
+                    },
                   ]}
                 >
                   <Input prefix={<MailOutlined />} placeholder="E-mail" />
@@ -91,7 +110,9 @@ export default function LoginAndRegister() {
                 <Form.Item
                   name="password"
                   label="Senha"
-                  rules={[{ required: true, message: 'Por favor, insira uma senha!' }]}
+                  rules={[
+                    { required: true, message: 'Por favor, insira uma senha!' },
+                  ]}
                 >
                   <Input.Password
                     prefix={<LockOutlined />}
@@ -109,5 +130,5 @@ export default function LoginAndRegister() {
         </Card>
       </div>
     </div>
-  );
+  )
 }

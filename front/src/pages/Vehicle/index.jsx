@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import { Card, Button, Row, Col, message } from 'antd'
 import { useNavigate } from 'react-router-dom'
 import AddVehicleModal from '../../components/Modal/Vehicle'
+import caminhaoLogo1 from '../../components/assets/caminhao_1.jfif'
+import caminhaoLogo2 from '../../components/assets/caminhao_2.jfif'
 
 export default function VehicleList() {
   const navigate = useNavigate()
@@ -14,7 +16,7 @@ export default function VehicleList() {
       ano: 2020,
       vencimentoDoc: '03/2023',
       renavam: '1090527699',
-      imagem: 'https://via.placeholder.com/150?text=Scania+BAP',
+      imagem: caminhaoLogo1,
     },
     {
       key: '2',
@@ -24,7 +26,7 @@ export default function VehicleList() {
       ano: 2018,
       vencimentoDoc: '08/2024',
       renavam: '2098765432',
-      imagem: 'https://via.placeholder.com/150?text=Volvo+CAM',
+      imagem: caminhaoLogo2,
     },
   ])
 
@@ -79,9 +81,7 @@ export default function VehicleList() {
                 <Button
                   type="link"
                   key={vehicle.key}
-                  onClick={() =>
-                    navigate(`/vehicle-maintenance/${vehicle.key}`)
-                  }
+                  onClick={() => navigate(`/vehicle/trip`)}
                 >
                   Viagens
                 </Button>,

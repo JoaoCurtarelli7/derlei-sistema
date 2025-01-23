@@ -1,22 +1,23 @@
-/* Layout Geral */
 .layout {
   display: flex;
   height: 100vh;
   overflow: hidden;
 }
 
-/* Sidebar Customizada */
 .sidebar {
-  position: fixed;
+  position: sticky;
   top: 0;
-  left: 0;
   width: 280px;
   height: 100vh;
   background-color: #343a40;
   color: white;
-  overflow-y: auto; /* Permite rolagem se necessário */
+  overflow-y: auto;
   padding: 20px 10px;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.options {
+  background-color: rgb(51, 119, 188);
 }
 
 .sidebar-title {
@@ -29,16 +30,36 @@
   text-decoration: none;
 }
 
-.sidebar .ant-menu-item-selected a {
-  background-color: #495057 !important;
-  border-radius: 5px;
+.sidebar .ant-menu {
+  background-color: #343a40 !important;
+  border: none;
 }
 
-/* Conteúdo Principal */
-.content {
-  margin-left: 280px; /* Espaço igual à largura da sidebar */
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto; /* Permite rolagem no conteúdo principal */
-  background-color: #f8f9fa;
+.sidebar .ant-menu-item-selected {
+  background-color: #495057 !important;
+}
+
+.sidebar .ant-menu-item {
+  color: white !important;
+}
+
+.sidebar .ant-menu-item a {
+  color: white !important;
+}
+
+.sidebar .ant-menu-item:hover {
+  background-color: #495057 !important;
+}
+
+.sidebar .dropdown-menu-custom {
+  background-color: rgb(97, 108, 120) !important;
+  border: none;
+}
+
+.sidebar .dropdown-item {
+  color: white !important;
+}
+
+.sidebar .dropdown-item:hover {
+  background-color: rgb(8, 109, 210) !important;
 }

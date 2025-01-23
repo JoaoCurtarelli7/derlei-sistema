@@ -1,21 +1,21 @@
-import React from 'react';
-import { Modal, Form, Input, Upload } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import React from 'react'
+import { Modal, Form, Input, Upload } from 'antd'
+import { PlusOutlined } from '@ant-design/icons'
 
 export default function AddVehicleModal({ visible, onCancel, onSubmit }) {
-  const [form] = Form.useForm();
+  const [form] = Form.useForm()
 
   const handleOk = () => {
     form
       .validateFields()
       .then((values) => {
-        onSubmit(values);
-        form.resetFields();
+        onSubmit(values)
+        form.resetFields()
       })
       .catch((info) => {
-        console.error('Validate Failed:', info);
-      });
-  };
+        console.error('Validate Failed:', info)
+      })
+  }
 
   return (
     <Modal
@@ -30,7 +30,9 @@ export default function AddVehicleModal({ visible, onCancel, onSubmit }) {
         <Form.Item
           name="nome"
           label="Nome"
-          rules={[{ required: true, message: 'Por favor, insira o nome do caminhão' }]}
+          rules={[
+            { required: true, message: 'Por favor, insira o nome do caminhão' },
+          ]}
         >
           <Input />
         </Form.Item>
@@ -58,7 +60,12 @@ export default function AddVehicleModal({ visible, onCancel, onSubmit }) {
         <Form.Item
           name="vencimentoDoc"
           label="Vencimento do Documento"
-          rules={[{ required: true, message: 'Por favor, insira o vencimento do documento' }]}
+          rules={[
+            {
+              required: true,
+              message: 'Por favor, insira o vencimento do documento',
+            },
+          ]}
         >
           <Input />
         </Form.Item>
@@ -70,11 +77,7 @@ export default function AddVehicleModal({ visible, onCancel, onSubmit }) {
           <Input />
         </Form.Item>
         <Form.Item name="imagem" label="Imagem do Caminhão">
-          <Upload
-            action="/upload"
-            listType="picture-card"
-            maxCount={1}
-          >
+          <Upload action="/upload" listType="picture-card" maxCount={1}>
             <div>
               <PlusOutlined />
               <div style={{ marginTop: 8 }}>Upload</div>
@@ -83,5 +86,5 @@ export default function AddVehicleModal({ visible, onCancel, onSubmit }) {
         </Form.Item>
       </Form>
     </Modal>
-  );
+  )
 }
