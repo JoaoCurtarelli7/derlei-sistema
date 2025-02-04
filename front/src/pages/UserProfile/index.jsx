@@ -1,41 +1,66 @@
-import React, { useState } from 'react';
-import { Card, Row, Col, Form, Input, Button, Typography } from 'antd';
+import React, { useState } from 'react'
+import { Card, Row, Col, Form, Input, Button, Typography } from 'antd'
 
-const { Title } = Typography;
+const { Title, Text } = Typography
 
 export default function UserProfile() {
-  const [form] = Form.useForm();
-  const [isEditing, setIsEditing] = useState(false);
+  const [form] = Form.useForm()
+  const [isEditing, setIsEditing] = useState(false)
 
-  // Dados simulados do usuário
   const [userData, setUserData] = useState({
     name: 'John Doe',
     email: 'john.doe@example.com',
     phone: '123-456-7890',
     address: '123 Main Street, City, Country',
-  });
+  })
 
   const handleEdit = () => {
-    setIsEditing(true);
-    form.setFieldsValue(userData); // Preenche os campos do formulário com os dados do usuário
-  };
+    setIsEditing(true)
+    form.setFieldsValue(userData)
+  }
 
   const handleCancel = () => {
-    setIsEditing(false);
-    form.resetFields(); // Limpa os campos do formulário
-  };
+    setIsEditing(false)
+    form.resetFields()
+  }
 
   const handleSave = (values) => {
-    setUserData(values); // Atualiza os dados do usuário
-    setIsEditing(false);
-  };
+    setUserData(values)
+    setIsEditing(false)
+  }
 
   return (
-    <Card style={{ margin: '20px', padding: '20px' }} bordered>
-      <Title level={2}>Perfil do Usuário</Title>
-      <Row gutter={[16, 16]}>
+    <Card
+      style={{
+        margin: '20px',
+        padding: '30px',
+        borderRadius: '12px',
+        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+        backgroundColor: '#f9f9fb',
+      }}
+      bordered={false}
+    >
+      <Title
+        level={2}
+        style={{ color: '#3b4e6f', textAlign: 'center', marginBottom: '20px' }}
+      >
+        Perfil do Usuário
+      </Title>
+      <Row gutter={[24, 24]}>
         <Col span={12}>
-          <Card title="Informações do Usuário" bordered>
+          <Card
+            title={
+              <Title level={4} style={{ marginBottom: 0 }}>
+                Informações do Usuário
+              </Title>
+            }
+            bordered={false}
+            style={{
+              borderRadius: '8px',
+              backgroundColor: '#ffffff',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+            }}
+          >
             {isEditing ? (
               <Form
                 form={form}
@@ -46,7 +71,9 @@ export default function UserProfile() {
                 <Form.Item
                   label="Nome"
                   name="name"
-                  rules={[{ required: true, message: 'Por favor, insira seu nome!' }]}
+                  rules={[
+                    { required: true, message: 'Por favor, insira seu nome!' },
+                  ]}
                 >
                   <Input />
                 </Form.Item>
@@ -65,7 +92,12 @@ export default function UserProfile() {
                 <Form.Item
                   label="Telefone"
                   name="phone"
-                  rules={[{ required: true, message: 'Por favor, insira seu telefone!' }]}
+                  rules={[
+                    {
+                      required: true,
+                      message: 'Por favor, insira seu telefone!',
+                    },
+                  ]}
                 >
                   <Input />
                 </Form.Item>
@@ -73,12 +105,17 @@ export default function UserProfile() {
                 <Form.Item
                   label="Endereço"
                   name="address"
-                  rules={[{ required: true, message: 'Por favor, insira seu endereço!' }]}
+                  rules={[
+                    {
+                      required: true,
+                      message: 'Por favor, insira seu endereço!',
+                    },
+                  ]}
                 >
                   <Input />
                 </Form.Item>
 
-                <Row gutter={[8, 8]}>
+                <Row gutter={[16, 16]}>
                   <Col>
                     <Button type="primary" htmlType="submit">
                       Salvar
@@ -90,20 +127,33 @@ export default function UserProfile() {
                 </Row>
               </Form>
             ) : (
-              <div>
-                <p>
+              <div style={{ lineHeight: '2' }}>
+                <Text>
                   <strong>Nome:</strong> {userData.name}
-                </p>
-                <p>
+                </Text>
+                <br />
+                <Text>
                   <strong>Email:</strong> {userData.email}
-                </p>
-                <p>
+                </Text>
+                <br />
+                <Text>
                   <strong>Telefone:</strong> {userData.phone}
-                </p>
-                <p>
+                </Text>
+                <br />
+                <Text>
                   <strong>Endereço:</strong> {userData.address}
-                </p>
-                <Button type="primary" onClick={handleEdit}>
+                </Text>
+                <br />
+                <Button
+                  type="primary"
+                  onClick={handleEdit}
+                  style={{
+                    marginTop: '16px',
+                    backgroundColor: '#1890ff',
+                    borderColor: '#1890ff',
+                    borderRadius: '8px',
+                  }}
+                >
                   Editar Perfil
                 </Button>
               </div>
@@ -111,12 +161,29 @@ export default function UserProfile() {
           </Card>
         </Col>
         <Col span={12}>
-          <Card title="Alterar Senha" bordered>
+          <Card
+            title={
+              <Title level={4} style={{ marginBottom: 0 }}>
+                Alterar Senha
+              </Title>
+            }
+            bordered={false}
+            style={{
+              borderRadius: '8px',
+              backgroundColor: '#ffffff',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+            }}
+          >
             <Form layout="vertical">
               <Form.Item
                 label="Senha Atual"
                 name="currentPassword"
-                rules={[{ required: true, message: 'Por favor, insira sua senha atual!' }]}
+                rules={[
+                  {
+                    required: true,
+                    message: 'Por favor, insira sua senha atual!',
+                  },
+                ]}
               >
                 <Input.Password />
               </Form.Item>
@@ -124,7 +191,12 @@ export default function UserProfile() {
               <Form.Item
                 label="Nova Senha"
                 name="newPassword"
-                rules={[{ required: true, message: 'Por favor, insira a nova senha!' }]}
+                rules={[
+                  {
+                    required: true,
+                    message: 'Por favor, insira a nova senha!',
+                  },
+                ]}
               >
                 <Input.Password />
               </Form.Item>
@@ -134,13 +206,18 @@ export default function UserProfile() {
                 name="confirmPassword"
                 dependencies={['newPassword']}
                 rules={[
-                  { required: true, message: 'Por favor, confirme a nova senha!' },
+                  {
+                    required: true,
+                    message: 'Por favor, confirme a nova senha!',
+                  },
                   ({ getFieldValue }) => ({
                     validator(_, value) {
                       if (!value || getFieldValue('newPassword') === value) {
-                        return Promise.resolve();
+                        return Promise.resolve()
                       }
-                      return Promise.reject(new Error('As senhas não correspondem!'));
+                      return Promise.reject(
+                        new Error('As senhas não correspondem!'),
+                      )
                     },
                   }),
                 ]}
@@ -148,7 +225,15 @@ export default function UserProfile() {
                 <Input.Password />
               </Form.Item>
 
-              <Button type="primary" htmlType="submit">
+              <Button
+                type="primary"
+                htmlType="submit"
+                style={{
+                  backgroundColor: '#52c41a',
+                  borderColor: '#52c41a',
+                  borderRadius: '8px',
+                }}
+              >
                 Alterar Senha
               </Button>
             </Form>
@@ -156,5 +241,5 @@ export default function UserProfile() {
         </Col>
       </Row>
     </Card>
-  );
+  )
 }

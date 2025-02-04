@@ -28,9 +28,12 @@ export default function Closing() {
 
   const handleAdd = (values) => {
     const newData = { key: Date.now().toString(), ...values }
-    if (currentType === 'entrada') setEntradas((prev) => [...prev, newData])
-    if (currentType === 'saida') setSaidas((prev) => [...prev, newData])
-    if (currentType === 'imposto') setImpostos((prev) => [...prev, newData])
+    const updateState = {
+      entrada: () => setEntradas((prev) => [...prev, newData]),
+      saida: () => setSaidas((prev) => [...prev, newData]),
+      imposto: () => setImpostos((prev) => [...prev, newData]),
+    }
+    updateState[currentType]?.()
   }
 
   const openModal = (type) => {
@@ -42,158 +45,61 @@ export default function Closing() {
     const workbook = XLSX.utils.book_new()
 
     const worksheetData = [
-      // Cabeçalho de Entradas
-      [
-        {
-          v: 'ENTRADAS',
-          s: {
-            font: { bold: true, sz: 14 },
-            alignment: { horizontal: 'center' },
-          },
-        },
-      ],
+      ['ENTRADAS'],
       ['SERVIÇO / ENTRADAS', 'VALOR'],
       ...entradas.map(({ descricao, valor }) => [descricao, valor]),
       [],
-
-      // Cabeçalho de Saídas
-      [
-        {
-          v: 'SAÍDAS',
-          s: {
-            font: { bold: true, sz: 14 },
-            alignment: { horizontal: 'center' },
-          },
-        },
-      ],
+      ['SAÍDAS'],
       ['DESPESA', 'VALOR'],
       ...saidas.map(({ descricao, valor }) => [descricao, valor]),
       [],
-
-      // Cabeçalho de Impostos
-      [
-        {
-          v: 'IMPOSTOS',
-          s: {
-            font: { bold: true, sz: 14 },
-            alignment: { horizontal: 'center' },
-          },
-        },
-      ],
+      ['IMPOSTOS'],
       ['IMPOSTO', 'VALOR'],
       ...impostos.map(({ nome, valor }) => [nome, valor]),
       [],
-
-      // Totais
-      [
-        {
-          v: 'TOTAIS',
-          s: {
-            font: { bold: true, sz: 14 },
-            alignment: { horizontal: 'center' },
-          },
-        },
-      ],
+      ['TOTAIS'],
       ['Total Entradas', totais.totalEntradas],
       ['Total Saídas', totais.totalSaidas],
     ]
 
     const worksheet = XLSX.utils.aoa_to_sheet(worksheetData)
-
-    // Aplicar estilos às células
-    Object.keys(worksheet).forEach((cell) => {
-      if (cell[0] === '!') return
-      worksheet[cell].s = {
-        font: { name: 'Arial', sz: 12 },
-        alignment: { horizontal: 'center', vertical: 'center' },
-        border: {
-          top: { style: 'thin', color: { rgb: '000000' } },
-          bottom: { style: 'thin', color: { rgb: '000000' } },
-          left: { style: 'thin', color: { rgb: '000000' } },
-          right: { style: 'thin', color: { rgb: '000000' } },
-        },
-      }
-
-      // Aplicar cores de fundo específicas
-      if (cell.startsWith('A1')) {
-        worksheet[cell].s.fill = { fgColor: { rgb: 'FFFFCC' } } // Exemplo: amarelo claro
-      }
-    })
-
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Fechamento Mensal')
     XLSX.writeFile(workbook, 'FechamentoMensal.xlsx')
   }
 
-  const colunasEntradas = [
-    { title: 'Descrição', dataIndex: 'descricao', key: 'descricao' },
-    { title: 'Valor', dataIndex: 'valor', key: 'valor', align: 'right' },
-  ]
-
-  const colunasSaidas = [
-    { title: 'Descrição', dataIndex: 'descricao', key: 'descricao' },
-    { title: 'Despesa', dataIndex: 'valor', key: 'valor', align: 'right' },
-  ]
-
-  const colunasImpostos = [
-    { title: 'Imposto', dataIndex: 'nome', key: 'nome' },
+  const createColumns = (type) => [
+    {
+      title: type === 'imposto' ? 'Imposto' : 'Descrição',
+      dataIndex: type === 'imposto' ? 'nome' : 'descricao',
+      key: 'descricao',
+    },
     { title: 'Valor', dataIndex: 'valor', key: 'valor', align: 'right' },
   ]
 
   return (
-    <Card style={{ margin: '20px', padding: '20px' }} bordered>
+    <Card className="closing-card">
       <Title level={2}>Fechamento Mensal</Title>
       <Row gutter={[16, 16]}>
-        <Col span={12}>
-          <Card
-            title="Entradas"
-            className="custom-card entradas"
-            extra={
-              <Button onClick={() => openModal('entrada')}>Adicionar</Button>
-            }
-          >
-            <Table
-              dataSource={entradas}
-              columns={colunasEntradas}
-              pagination={false}
-              size="small"
-            />
-          </Card>
-        </Col>
-
-        <Col span={12}>
-          <Card
-            title="Saídas"
-            className="custom-card saidas"
-            extra={
-              <Button onClick={() => openModal('saida')}>Adicionar</Button>
-            }
-          >
-            <Table
-              dataSource={saidas}
-              columns={colunasSaidas}
-              pagination={false}
-              size="small"
-            />
-          </Card>
-        </Col>
-
-        <Col span={12}>
-          <Card
-            title="Impostos"
-            className="custom-card impostos"
-            extra={
-              <Button onClick={() => openModal('imposto')}>Adicionar</Button>
-            }
-          >
-            <Table
-              dataSource={impostos}
-              columns={colunasImpostos}
-              pagination={false}
-              size="small"
-            />
-          </Card>
-        </Col>
-
+        {[
+          { title: 'Entradas', data: entradas, type: 'entrada' },
+          { title: 'Saídas', data: saidas, type: 'saida' },
+          { title: 'Impostos', data: impostos, type: 'imposto' },
+        ].map(({ title, data, type }) => (
+          <Col span={12} key={type}>
+            <Card
+              title={title}
+              className={`custom-card ${type}`}
+              extra={<Button onClick={() => openModal(type)}>Adicionar</Button>}
+            >
+              <Table
+                dataSource={data}
+                columns={createColumns(type)}
+                pagination={false}
+                size="small"
+              />
+            </Card>
+          </Col>
+        ))}
         <Col span={12}>
           <Card title="Totais" className="custom-card totais">
             <div className="totais-container">
@@ -203,26 +109,16 @@ export default function Closing() {
           </Card>
         </Col>
       </Row>
-
-      <Button
-        type="primary"
-        onClick={exportToExcel}
-        style={{ marginTop: '20px' }}
-      >
-        Exportar para Excel
-      </Button>
-
+      <div className="action-buttons">
+        <Button type="primary" onClick={exportToExcel}>
+          Exportar para Excel
+        </Button>
+      </div>
       <CustomModal
         isVisible={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleAdd}
-        title={`Adicionar ${
-          currentType === 'entrada'
-            ? 'Entrada'
-            : currentType === 'saida'
-              ? 'Saída'
-              : 'Imposto'
-        }`}
+        title={`Adicionar ${currentType.charAt(0).toUpperCase() + currentType.slice(1)}`}
         type={currentType}
       />
     </Card>

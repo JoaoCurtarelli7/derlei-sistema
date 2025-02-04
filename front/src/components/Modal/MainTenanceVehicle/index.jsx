@@ -1,31 +1,54 @@
-import React from 'react'
-import { Modal, Form, Input, InputNumber } from 'antd'
+import React, { useEffect } from 'react'
+import { Modal, Form, Input, InputNumber, Button } from 'antd'
 
 export default function VehicleMaintenanceModal({
   visible,
   onCancel,
   onAddMaintenance,
+  onEditMaintenance,
+  editingMaintenance,
 }) {
   const [form] = Form.useForm()
+
+  // Set form fields when editing
+  useEffect(() => {
+    if (editingMaintenance) {
+      form.setFieldsValue(editingMaintenance)
+    }
+  }, [editingMaintenance, form])
 
   const handleOk = () => {
     form
       .validateFields()
       .then((values) => {
-        onAddMaintenance(values)
+        if (editingMaintenance) {
+          onEditMaintenance(values) // Call edit function
+        } else {
+          onAddMaintenance(values) // Call add function
+        }
         form.resetFields()
       })
-      .catch((info) => console.log('Validate Failed:', info))
+      .catch((info) => {
+        console.log('Validate Failed:', info)
+      })
   }
 
   return (
     <Modal
-      title="Adicionar Manutenção"
+      title={editingMaintenance ? 'Editar Manutenção' : 'Adicionar Manutenção'}
       visible={visible}
       onOk={handleOk}
       onCancel={onCancel}
-      okText="Salvar"
+      okText={editingMaintenance ? 'Salvar' : 'Adicionar'}
       cancelText="Cancelar"
+      footer={[
+        <Button key="back" onClick={onCancel}>
+          Cancelar
+        </Button>,
+        <Button key="submit" type="primary" onClick={handleOk}>
+          {editingMaintenance ? 'Salvar' : 'Adicionar'}
+        </Button>,
+      ]}
     >
       <Form form={form} layout="vertical" name="maintenanceForm">
         <Form.Item

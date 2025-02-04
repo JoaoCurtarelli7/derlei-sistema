@@ -3,12 +3,13 @@ import { Menu } from 'antd'
 import { Link } from 'react-router-dom'
 import {
   FaHome,
-  FaTachometerAlt,
   FaShoppingCart,
-  FaBoxes,
-  FaUser,
+  FaTruckMoving,
+  FaUsers,
+  FaStoreAlt,
+  FaMoneyBillWave,
+  FaPrint,
 } from 'react-icons/fa'
-import { FaCompassDrafting } from 'react-icons/fa6'
 import Dropdown from 'react-bootstrap/Dropdown'
 import user from '../assets/user.png'
 import moment from 'moment'
@@ -47,8 +48,11 @@ export default function AppSidebar() {
             </Link>
           </Menu.Item>
 
-          <Menu.Item key="/closing" icon={<FaTachometerAlt className="me-2" />}>
-            <Link to="/closing" className="text-decoration-none">
+          <Menu.Item
+            key="/closing-month"
+            icon={<FaMoneyBillWave className="me-2" />}
+          >
+            <Link to="/closing-month" className="text-decoration-none">
               Fechamento
             </Link>
           </Menu.Item>
@@ -59,7 +63,7 @@ export default function AppSidebar() {
             </Link>
           </Menu.Item>
 
-          <Menu.Item key="/employee" icon={<FaBoxes className="me-2" />}>
+          <Menu.Item key="/employee" icon={<FaUsers className="me-2" />}>
             <Link to="/employee" className="text-decoration-none">
               Funcionário
             </Link>
@@ -67,28 +71,32 @@ export default function AppSidebar() {
 
           <Menu.Item
             key="/vehicle-maintenance"
-            icon={<FaUser className="me-2" />}
+            icon={<FaTruckMoving className="me-2" />}
           >
             <Link to="/vehicle-maintenance" className="text-decoration-none">
               Manutenção Veículos
             </Link>
           </Menu.Item>
 
-          <Menu.Item
-            key="/companies"
-            icon={<FaCompassDrafting className="me-2" />}
-          >
+          <Menu.Item key="/companies" icon={<FaStoreAlt className="me-2" />}>
             <Link to="/companies" className="text-decoration-none">
               Empresas
+            </Link>
+          </Menu.Item>
+
+          <Menu.Item key="/report" icon={<FaPrint className="me-2" />}>
+            <Link to="/report" className="text-decoration-none">
+              Relatorios
             </Link>
           </Menu.Item>
         </Menu>
 
         <hr />
+
         <Dropdown className="sidebar-dropdown">
           <Dropdown.Toggle
             id="dropdown-user"
-            className="d-flex align-items-center text-white bg-dark border-0"
+            className="d-flex align-items-center text-white bg-transparent border-0"
           >
             <img
               src={user}
@@ -97,14 +105,13 @@ export default function AppSidebar() {
               height="32"
               className="rounded-circle me-2"
             />
-            <strong>Derlei</strong>
+            <strong style={{ margin: ' 010px' }}> Derlei</strong>
           </Dropdown.Toggle>
 
           <Dropdown.Menu variant="dark" className="dropdown-menu-custom">
             <Dropdown.Item href="/user-profile">Profile</Dropdown.Item>
-            <Dropdown.Item href="#">Settings</Dropdown.Item>
             <Dropdown.Divider />
-            <Dropdown.Item href="#">Sign out</Dropdown.Item>
+            <Dropdown.Item href="/login">Sair</Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown>
       </nav>

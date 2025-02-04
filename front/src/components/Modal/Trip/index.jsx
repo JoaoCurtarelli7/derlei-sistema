@@ -1,15 +1,27 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Modal, Form, Input, DatePicker, InputNumber } from 'antd'
 
-export default function TripModal({ visible, onCancel, onSubmit }) {
+export default function TripModal({
+  visible,
+  onCancel,
+  onSubmit,
+  initialValues,
+}) {
   const [form] = Form.useForm()
+
+  // Preenche os campos do modal com os dados da viagem ao editar
+  useEffect(() => {
+    if (initialValues) {
+      form.setFieldsValue(initialValues)
+    }
+  }, [initialValues, form])
 
   const handleOk = () => {
     form
       .validateFields()
       .then((values) => {
         form.resetFields()
-        onSubmit(values)
+        onSubmit(values) // Envia os dados preenchidos ao editar
       })
       .catch((info) => {
         console.error('Erro ao validar formulário:', info)
@@ -18,7 +30,7 @@ export default function TripModal({ visible, onCancel, onSubmit }) {
 
   return (
     <Modal
-      title="Cadastrar Nova Viagem"
+      title={initialValues ? 'Editar Viagem' : 'Cadastrar Nova Viagem'}
       visible={visible}
       onOk={handleOk}
       onCancel={onCancel}
@@ -27,21 +39,16 @@ export default function TripModal({ visible, onCancel, onSubmit }) {
     >
       <Form form={form} layout="vertical">
         <Form.Item
-          label="Descrição"
-          name="descricao"
-          rules={[
-            {
-              required: true,
-              message: 'Por favor, insira a descrição da viagem!',
-            },
-          ]}
+          label="Destino"
+          name="destination"
+          rules={[{ required: true, message: 'Por favor, insira o destino!' }]}
         >
-          <Input placeholder="Descrição da viagem" />
+          <Input placeholder="Destino da viagem" />
         </Form.Item>
 
         <Form.Item
           label="Motorista"
-          name="motorista"
+          name="driver"
           rules={[
             {
               required: true,
@@ -54,7 +61,7 @@ export default function TripModal({ visible, onCancel, onSubmit }) {
 
         <Form.Item
           label="Data da Viagem"
-          name="dataViagem"
+          name="date"
           rules={[
             { required: true, message: 'Por favor, insira a data da viagem!' },
           ]}
@@ -63,18 +70,18 @@ export default function TripModal({ visible, onCancel, onSubmit }) {
         </Form.Item>
 
         <Form.Item
-          label="Veículo"
-          name="veiculo"
-          rules={[{ required: true, message: 'Por favor, insira o veículo!' }]}
+          label="Caminhão"
+          name="truck"
+          rules={[{ required: true, message: 'Por favor, insira o caminhão!' }]}
         >
-          <Input placeholder="Veículo utilizado" />
+          <Input placeholder="Caminhão utilizado" />
         </Form.Item>
 
         <Form.Item
           label="Valor"
-          name="valor"
+          name="freightValue"
           rules={[
-            { required: true, message: 'Por favor, insira o valor da viagem!' },
+            { required: true, message: 'Por favor, insira o valor do frete!' },
           ]}
         >
           <InputNumber

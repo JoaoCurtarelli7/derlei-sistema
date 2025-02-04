@@ -1,11 +1,16 @@
-import React, { useState } from 'react'
-import { Table, Tag, Button, Card } from 'antd'
+import React, { useState, useEffect } from 'react'
+import { Table, Tag, Button, Card, Input, Space, Typography } from 'antd'
+import AddCompanyModal from '../../components/Modal/Companies'
+import { FaEdit, FaTrash } from 'react-icons/fa'
+
+const { Title } = Typography
 
 export default function CompanyList() {
   const [searchText, setSearchText] = useState('')
   const [filteredData, setFilteredData] = useState([])
-
-  const data = [
+  const [isModalVisible, setIsModalVisible] = useState(false)
+  const [editingCompany, setEditingCompany] = useState(null) // Para controlar a empresa que está sendo editada
+  const [data, setData] = useState([
     {
       key: '1',
       nome: 'Empresa Alpha',
@@ -14,6 +19,7 @@ export default function CompanyList() {
       dataCadastro: '01/01/2023',
       status: 'Ativo',
       responsavel: 'João',
+      comissao: '3',
     },
     {
       key: '2',
@@ -23,6 +29,7 @@ export default function CompanyList() {
       dataCadastro: '15/03/2023',
       status: 'Inativo',
       responsavel: 'Maria',
+      comissao: '2',
     },
     {
       key: '3',
@@ -32,9 +39,23 @@ export default function CompanyList() {
       dataCadastro: '10/06/2023',
       status: 'Ativo',
       responsavel: 'Carlos',
+      comissao: '4',
     },
-  ]
+  ])
 
+  // Filtrar empresas pela pesquisa
+  useEffect(() => {
+    if (searchText) {
+      const filtered = data.filter((item) =>
+        item.nome.toLowerCase().includes(searchText.toLowerCase()),
+      )
+      setFilteredData(filtered)
+    } else {
+      setFilteredData(data)
+    }
+  }, [searchText, data])
+
+  // Definindo as colunas da tabela
   const columns = [
     {
       title: 'Nome',
@@ -71,6 +92,11 @@ export default function CompanyList() {
         ),
     },
     {
+      title: 'Comissão',
+      dataIndex: 'comissao',
+      key: 'comissao',
+    },
+    {
       title: 'Responsável',
       dataIndex: 'responsavel',
       key: 'responsavel',
@@ -79,21 +105,73 @@ export default function CompanyList() {
       title: 'Ações',
       key: 'acoes',
       render: (_, record) => (
-        <Button type="link" onClick={() => alert(`Detalhes de ${record.nome}`)}>
-          Detalhes
-        </Button>
+        <>
+          <FaEdit
+            style={{ cursor: 'pointer', marginRight: '10px' }}
+            onClick={() => handleEdit(record)}
+          />
+
+          <FaTrash style={{ cursor: 'pointer' }} />
+        </>
       ),
     },
   ]
 
+  const handleEdit = (company) => {
+    setEditingCompany(company)
+    setIsModalVisible(true)
+  }
+
   return (
-    <Card style={{ margin: '20px', padding: '20px' }} bordered>
-      <h1>Lista de Empresas</h1>
+    <Card
+      style={{
+        margin: '20px',
+        padding: '20px',
+        borderRadius: '8px',
+        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+      }}
+      bordered
+    >
+      <Title level={3} style={{ color: '#333', marginBottom: '20px' }}>
+        Lista de Empresas
+      </Title>
+
+      <Space
+        style={{ marginBottom: '20px', marginRight: '30px' }}
+        direction="vertical"
+        size="middle"
+      >
+        <Input
+          placeholder="Pesquisar por nome"
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          style={{ width: '100%', maxWidth: '300px' }}
+        />
+      </Space>
+
+      <Button
+        type="primary"
+        style={{ marginBottom: '20px' }}
+        onClick={() => setIsModalVisible(true)}
+      >
+        Adicionar Empresa
+      </Button>
+
       <Table
         dataSource={searchText ? filteredData : data}
         columns={columns}
         pagination={{ pageSize: 5 }}
         bordered
+        style={{ fontFamily: 'Arial, sans-serif' }}
+      />
+
+      <AddCompanyModal
+        isModalVisible={isModalVisible}
+        setIsModalVisible={setIsModalVisible}
+        setData={setData}
+        data={data}
+        editingCompany={editingCompany}
+        setEditingCompany={setEditingCompany}
       />
     </Card>
   )

@@ -1,88 +1,92 @@
-import React from 'react'
-import { Modal, Form, Input, Upload } from 'antd'
-import { PlusOutlined } from '@ant-design/icons'
+import React, { useEffect } from 'react'
+import { Modal, Form, Input, InputNumber } from 'antd'
 
-export default function AddVehicleModal({ visible, onCancel, onSubmit }) {
+export default function VehicleMaintenanceModal({
+  visible,
+  onCancel,
+  onAddMaintenance,
+  onEditMaintenance,
+  editingMaintenance,
+}) {
   const [form] = Form.useForm()
+
+  useEffect(() => {
+    if (editingMaintenance) {
+      form.setFieldsValue(editingMaintenance)
+    } else {
+      form.resetFields()
+    }
+  }, [editingMaintenance, form])
 
   const handleOk = () => {
     form
       .validateFields()
       .then((values) => {
-        onSubmit(values)
+        if (editingMaintenance) {
+          onEditMaintenance(values)
+        } else {
+          onAddMaintenance(values)
+        }
         form.resetFields()
       })
       .catch((info) => {
-        console.error('Validate Failed:', info)
+        console.log('Validate Failed:', info)
       })
   }
 
   return (
     <Modal
+      title={editingMaintenance ? 'Editar Manutenção' : 'Adicionar Manutenção'}
       visible={visible}
-      title="Adicionar Caminhão"
-      onCancel={onCancel}
       onOk={handleOk}
-      okText="Salvar"
+      onCancel={onCancel}
+      okText={editingMaintenance ? 'Salvar' : 'Adicionar'}
       cancelText="Cancelar"
     >
-      <Form form={form} layout="vertical">
+      <Form form={form} layout="vertical" name="maintenanceForm">
         <Form.Item
-          name="nome"
-          label="Nome"
-          rules={[
-            { required: true, message: 'Por favor, insira o nome do caminhão' },
-          ]}
-        >
-          <Input />
-        </Form.Item>
-        <Form.Item
-          name="placa"
-          label="Placa"
-          rules={[{ required: true, message: 'Por favor, insira a placa' }]}
-        >
-          <Input />
-        </Form.Item>
-        <Form.Item
-          name="marca"
-          label="Marca"
-          rules={[{ required: true, message: 'Por favor, insira a marca' }]}
-        >
-          <Input />
-        </Form.Item>
-        <Form.Item
-          name="ano"
-          label="Ano"
-          rules={[{ required: true, message: 'Por favor, insira o ano' }]}
-        >
-          <Input type="number" />
-        </Form.Item>
-        <Form.Item
-          name="vencimentoDoc"
-          label="Vencimento do Documento"
+          name="data"
+          label="Data"
           rules={[
             {
               required: true,
-              message: 'Por favor, insira o vencimento do documento',
+              message: 'Por favor, insira a data da manutenção',
             },
           ]}
         >
           <Input />
         </Form.Item>
         <Form.Item
-          name="renavam"
-          label="Renavam"
-          rules={[{ required: true, message: 'Por favor, insira o renavam' }]}
+          name="servico"
+          label="Serviço Realizado"
+          rules={[
+            {
+              required: true,
+              message: 'Por favor, insira o serviço realizado',
+            },
+          ]}
         >
           <Input />
         </Form.Item>
-        <Form.Item name="imagem" label="Imagem do Caminhão">
-          <Upload action="/upload" listType="picture-card" maxCount={1}>
-            <div>
-              <PlusOutlined />
-              <div style={{ marginTop: 8 }}>Upload</div>
-            </div>
-          </Upload>
+        <Form.Item
+          name="km"
+          label="KM"
+          rules={[{ required: true, message: 'Por favor, insira o KM' }]}
+        >
+          <InputNumber style={{ width: '100%' }} min={0} step={1} />
+        </Form.Item>
+        <Form.Item
+          name="valor"
+          label="Valor (R$)"
+          rules={[{ required: true, message: 'Por favor, insira o valor' }]}
+        >
+          <InputNumber
+            style={{ width: '100%' }}
+            min={0}
+            step={0.01}
+            prefix="R$ "
+            formatter={(value) => (value ? `R$ ${value}` : '')}
+          />
         </Form.Item>
       </Form>
     </Modal>

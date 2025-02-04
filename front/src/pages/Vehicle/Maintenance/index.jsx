@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Card, Table, Typography, Button, message } from 'antd'
 import { useParams } from 'react-router-dom'
 import VehicleMaintenanceModal from '../../../components/Modal/MainTenanceVehicle'
+import { FaEdit, FaTrash } from 'react-icons/fa'
 
 const { Title } = Typography
 
@@ -32,6 +33,7 @@ export default function VehicleMaintenanceList() {
   ])
 
   const [isModalVisible, setIsModalVisible] = useState(false)
+  const [editingMaintenance, setEditingMaintenance] = useState(null) // Track the maintenance being edited
 
   const totalGasto = maintenanceData.reduce((acc, curr) => acc + curr.valor, 0)
 
@@ -40,6 +42,22 @@ export default function VehicleMaintenanceList() {
     { title: 'Serviço Realizado', dataIndex: 'servico', key: 'servico' },
     { title: 'KM', dataIndex: 'km', key: 'km', align: 'right' },
     { title: 'Valor (R$)', dataIndex: 'valor', key: 'valor', align: 'right' },
+    {
+      title: 'Ações',
+      key: 'actions',
+      render: (_, record) => (
+        <>
+          <FaEdit
+            onClick={() => handleEdit(record)}
+            style={{ cursor: 'pointer', marginRight: '10px' }}
+          />
+          <FaTrash
+            onClick={() => handleDelete(record.key)}
+            style={{ cursor: 'pointer' }}
+          />
+        </>
+      ),
+    },
   ]
 
   const handleAddMaintenance = (values) => {
@@ -50,6 +68,26 @@ export default function VehicleMaintenanceList() {
     setMaintenanceData((prevData) => [...prevData, newMaintenance])
     setIsModalVisible(false)
     message.success('Manutenção adicionada com sucesso!')
+  }
+
+  const handleEdit = (record) => {
+    setEditingMaintenance(record) // Set the maintenance to be edited
+    setIsModalVisible(true) // Show the modal
+  }
+
+  const handleDelete = (key) => {
+    setMaintenanceData(maintenanceData.filter((item) => item.key !== key))
+    message.success('Manutenção removida com sucesso!')
+  }
+
+  const handleEditMaintenance = (values) => {
+    const updatedData = maintenanceData.map((item) =>
+      item.key === editingMaintenance.key ? { ...item, ...values } : item,
+    )
+    setMaintenanceData(updatedData)
+    setIsModalVisible(false)
+    setEditingMaintenance(null)
+    message.success('Manutenção atualizada com sucesso!')
   }
 
   return (
@@ -79,6 +117,8 @@ export default function VehicleMaintenanceList() {
         visible={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         onAddMaintenance={handleAddMaintenance}
+        onEditMaintenance={handleEditMaintenance}
+        editingMaintenance={editingMaintenance} // Pass the editing maintenance to the modal
       />
     </Card>
   )

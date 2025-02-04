@@ -1,11 +1,14 @@
-import React from 'react'
-import { Card, Table, Button, Tag } from 'antd'
+import React, { useState } from 'react'
+import { Card, Table, Button, Tag, Typography } from 'antd'
 import { useNavigate } from 'react-router-dom'
+import AddEmployeeModal from '../../components/Modal/Employee'
+
+const { Title } = Typography
 
 export default function EmployeeList() {
   const navigate = useNavigate()
 
-  const data = [
+  const [data, setData] = useState([
     {
       key: '1',
       nome: 'Robson Silva',
@@ -27,7 +30,7 @@ export default function EmployeeList() {
       salarioBase: 'R$ 2.800,00',
       status: 'Inativo',
     },
-  ]
+  ])
 
   const columns = [
     {
@@ -68,10 +71,34 @@ export default function EmployeeList() {
     },
   ]
 
+  const addEmployee = (newEmployee) => {
+    setData((prevData) => [...prevData, newEmployee])
+  }
+
   return (
-    <Card style={{ margin: '20px', padding: '20px' }} bordered>
-      <h1>Lista de Funcionários</h1>
-      <Table dataSource={data} columns={columns} pagination={{ pageSize: 5 }} />
+    <Card
+      style={{
+        margin: '20px',
+        padding: '20px',
+        borderRadius: '8px',
+        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+      }}
+      bordered
+    >
+      <Title level={3} style={{ color: '#333' }}>
+        Lista de Funcionários
+      </Title>
+
+      <Button type="primary" style={{ marginBottom: '20px' }}>
+        <AddEmployeeModal addEmployee={addEmployee} />
+      </Button>
+
+      <Table
+        dataSource={data}
+        columns={columns}
+        pagination={{ pageSize: 5 }}
+        style={{ fontFamily: 'Arial, sans-serif', marginTop: '20px' }}
+      />
     </Card>
   )
 }

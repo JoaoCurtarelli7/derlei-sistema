@@ -1,16 +1,17 @@
 import React from 'react'
-import { Card, Row, Col } from 'antd'
+import { Card, Row, Col, Typography } from 'antd'
 import { useNavigate } from 'react-router-dom'
 import empresaLogo1 from '../../../components/assets/empresa_1.png'
 import empresaLogo2 from '../../../components/assets/empresa_2.png'
 import empresaLogo3 from '../../../components/assets/empresa_3.png'
+
+const { Title } = Typography
 
 export default function LoadCompanies() {
   const navigate = useNavigate()
 
   const handleCardClick = (id) => {
     console.log(id)
-
     navigate(`/load/${id}`)
   }
 
@@ -37,37 +38,49 @@ export default function LoadCompanies() {
 
   return (
     <div>
-      <h1>Empresas</h1>
+      <Title level={2} style={{ textAlign: 'center', marginBottom: '40px' }}>
+        Empresas
+      </Title>
 
-      <Row gutter={[20, 16]} justify="center">
+      <Row gutter={[16, 24]} justify="center">
         {companies.map((company) => (
-          <Col span={4} offset={1} key={company.id}>
+          <Col xs={24} sm={12} md={8} lg={6} xl={4} key={company.id}>
             <Card
               hoverable
               style={{
-                width: '200px',
-                margin: '10px',
-                border: '2px solid rgb(120, 145, 222)',
-                borderRadius: '5px',
-                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                width: '100%',
+                border: 'none',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                borderRadius: '10px',
+                transition: 'transform 0.3s ease-in-out',
               }}
               cover={
                 <img
                   alt={company.name}
                   src={company.logo}
                   style={{
-                    height: '150px',
-                    objectFit: 'cover',
-                    padding: '10px',
+                    height: '180px',
+                    objectFit: 'contain',
+                    padding: '15px',
+                    borderRadius: '8px',
+                    transition: 'transform 0.3s ease-in-out',
                   }}
                 />
               }
               onClick={() => handleCardClick(company.id)}
             >
               <Card.Meta
-                title={company.name}
-                description={company.location}
-                style={{ textAlign: 'center' }}
+                title={
+                  <div style={{ fontWeight: 'bold', fontSize: '16px' }}>
+                    {company.name}
+                  </div>
+                }
+                description={
+                  <div style={{ color: '#777', fontSize: '14px' }}>
+                    {company.location}
+                  </div>
+                }
+                style={{ textAlign: 'center', padding: '10px 0' }}
               />
             </Card>
           </Col>

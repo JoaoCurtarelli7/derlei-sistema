@@ -1,31 +1,40 @@
+.closing-card {
+  margin: 20px;
+  padding: 30px;
+  background-color: #f9f9f9;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
 .custom-card {
-  border-radius: 8px;
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.custom-card.entradas {
-  background-color: #e8f5e9; /* Verde claro */
-}
-
-.custom-card.saidas {
-  background-color: #ffebee; /* Vermelho claro */
-}
-
-.custom-card.impostos {
-  background-color: #e3f2fd; /* Azul claro */
-}
-
-.custom-card.totais {
-  background-color: #fff8e1; /* Amarelo claro */
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
 }
 
 .totais-container {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.ant-card-title {
-  font-size: 18px;
-  font-weight: bold;
+.action-buttons {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.action-buttons .ant-btn {
+  border-radius: 8px;
+  font-size: 16px;
+  padding: 6px 20px;
+}
+
+.ant-btn-primary {
+  background-color: #4caf50;
+  border-color: #4caf50;
+}
+
+.ant-btn-primary:hover {
+  background-color: #45a049;
+  border-color: #45a049;
 }
