@@ -33,32 +33,33 @@ export default function UserProfile() {
     <Card
       style={{
         margin: '20px',
-        padding: '30px',
-        borderRadius: '12px',
-        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-        backgroundColor: '#f9f9fb',
+        padding: '40px',
+        borderRadius: '16px',
+        boxShadow: '0 6px 12px rgba(0, 0, 0, 0.1)',
+        backgroundColor: '#ffffff',
       }}
       bordered={false}
     >
       <Title
         level={2}
-        style={{ color: '#3b4e6f', textAlign: 'center', marginBottom: '20px' }}
+        style={{
+          color: '#4B4F58',
+          textAlign: 'center',
+          marginBottom: '30px',
+          fontWeight: 600,
+        }}
       >
         Perfil do Usuário
       </Title>
       <Row gutter={[24, 24]}>
-        <Col span={12}>
+        <Col xs={24} sm={12}>
           <Card
-            title={
-              <Title level={4} style={{ marginBottom: 0 }}>
-                Informações do Usuário
-              </Title>
-            }
+            title={<Title level={4}>Informações do Usuário</Title>}
             bordered={false}
             style={{
-              borderRadius: '8px',
-              backgroundColor: '#ffffff',
-              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+              borderRadius: '12px',
+              backgroundColor: '#fafafa',
+              boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
             }}
           >
             {isEditing ? (
@@ -117,17 +118,35 @@ export default function UserProfile() {
 
                 <Row gutter={[16, 16]}>
                   <Col>
-                    <Button type="primary" htmlType="submit">
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      style={{
+                        borderRadius: '8px',
+                        width: '100%',
+                        backgroundColor: '#1890ff',
+                      }}
+                    >
                       Salvar
                     </Button>
                   </Col>
                   <Col>
-                    <Button onClick={handleCancel}>Cancelar</Button>
+                    <Button
+                      onClick={handleCancel}
+                      style={{
+                        borderRadius: '8px',
+                        width: '100%',
+                        backgroundColor: '#f5222d',
+                        color: 'white',
+                      }}
+                    >
+                      Cancelar
+                    </Button>
                   </Col>
                 </Row>
               </Form>
             ) : (
-              <div style={{ lineHeight: '2' }}>
+              <div>
                 <Text>
                   <strong>Nome:</strong> {userData.name}
                 </Text>
@@ -149,9 +168,10 @@ export default function UserProfile() {
                   onClick={handleEdit}
                   style={{
                     marginTop: '16px',
+                    borderRadius: '8px',
                     backgroundColor: '#1890ff',
                     borderColor: '#1890ff',
-                    borderRadius: '8px',
+                    width: '100%',
                   }}
                 >
                   Editar Perfil
@@ -160,18 +180,15 @@ export default function UserProfile() {
             )}
           </Card>
         </Col>
-        <Col span={12}>
+
+        <Col xs={24} sm={12}>
           <Card
-            title={
-              <Title level={4} style={{ marginBottom: 0 }}>
-                Alterar Senha
-              </Title>
-            }
+            title={<Title level={4}>Alterar Senha</Title>}
             bordered={false}
             style={{
-              borderRadius: '8px',
-              backgroundColor: '#ffffff',
-              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+              borderRadius: '12px',
+              backgroundColor: '#fafafa',
+              boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
             }}
           >
             <Form layout="vertical">
@@ -229,9 +246,9 @@ export default function UserProfile() {
                 type="primary"
                 htmlType="submit"
                 style={{
-                  backgroundColor: '#52c41a',
-                  borderColor: '#52c41a',
                   borderRadius: '8px',
+                  backgroundColor: '#52c41a',
+                  width: '100%',
                 }}
               >
                 Alterar Senha

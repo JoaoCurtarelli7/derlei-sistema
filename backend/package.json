@@ -1,20 +1,34 @@
 {
-  "name": "backend",
+  "name": "prisma-test",
   "version": "1.0.0",
-  "type": "module",
+  "description": "",
+  "main": "index.js",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "nodemon src/index.js"
+    "dev": "tsx watch src/server.ts",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prisma:md": "prisma migrate dev --name init --create-only",
+    "prisma:mm": "prisma migrate dev",
+    "prisma:mr": "prisma migrate reset",
+    "prisma:v": "prisma studio"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/node": "^20.8.10",
+    "prisma": "^5.5.2",
+    "tsx": "^3.14.0",
+    "typescript": "^5.2.2"
   },
   "dependencies": {
-    "fastify": "^4.0.0",
-    "@prisma/client": "^4.0.0",
-    "bcrypt": "^5.0.0",
-    "fastify-jwt": "^5.0.0",
-    "jsonwebtoken": "^9.0.2"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.0",
-    "prisma": "^4.0.0"
+    "@fastify/cors": "^8.4.1",
+    "@prisma/client": "^5.5.2",
+    "@types/jsonwebtoken": "^9.0.8",
+    "bcrypt": "^5.1.1",
+    "bcryptjs": "^2.4.3",
+    "fastify": "^4.24.3",
+    "jsonwebtoken": "^9.0.2",
+    "zod": "^3.22.4"
   }
 }

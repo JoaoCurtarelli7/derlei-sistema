@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Table, Tag, Button, Card, Input, Space, Typography } from 'antd'
 import AddCompanyModal from '../../components/Modal/Companies'
 import { FaEdit, FaTrash } from 'react-icons/fa'
+import api from '../../lib/api'
 
 const { Title } = Typography
 
@@ -43,7 +44,11 @@ export default function CompanyList() {
     },
   ])
 
-  // Filtrar empresas pela pesquisa
+  useEffect(() => {
+    api.get('/company').then((response) => {
+      console.log(response.data)
+    })
+  }, [])
   useEffect(() => {
     if (searchText) {
       const filtered = data.filter((item) =>
