@@ -29,5 +29,33 @@ CREATE TABLE "Transaction" (
     CONSTRAINT "Transaction_employeeId_fkey" FOREIGN KEY ("employeeId") REFERENCES "Employee" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+-- CreateTable
+CREATE TABLE "User" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "name" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- CreateTable
+CREATE TABLE "Load" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "date" DATETIME NOT NULL,
+    "loadingNumber" TEXT NOT NULL,
+    "deliveries" INTEGER NOT NULL,
+    "cargoWeight" REAL NOT NULL,
+    "totalValue" REAL NOT NULL,
+    "freight4" REAL NOT NULL,
+    "totalFreight" REAL NOT NULL,
+    "closings" REAL NOT NULL,
+    "observations" TEXT,
+    "companyId" INTEGER NOT NULL,
+    CONSTRAINT "Load_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "Company" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "Company_cnpj_key" ON "Company"("cnpj");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");

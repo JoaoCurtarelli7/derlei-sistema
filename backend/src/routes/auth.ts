@@ -1,7 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
-import { hashPassword, verifyToken } from "../lib/auth";
+import { hashPassword } from "../lib/auth";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
@@ -20,16 +20,14 @@ export async function authRoutes(app: FastifyInstance) {
 
     const { name, email, password } = bodySchema.parse(req.body);
 
-    // Verifica se o usuário já existe
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
       return rep.code(400).send({ message: "E-mail já está em uso" });
     }
 
-    // Criptografa a senha antes de salvar
     const hashedPassword = await hashPassword(password);
 
-    const user = await prisma.user.create({
+    await prisma.user.create({
       data: { name, email, password: hashedPassword },
     });
 
@@ -39,38 +37,36 @@ export async function authRoutes(app: FastifyInstance) {
   app.post("/login", async (req, rep) => {
     try {
       console.log("Tentativa de login recebida!");
-  
+
       const { email, password } = loginSchema.parse(req.body);
       console.log("Email:", email);
-      
+
       const user = await prisma.user.findUnique({ where: { email } });
-  
+
       if (!user) {
         console.log("Usuário não encontrado");
         return rep.status(401).send({ message: "Email ou senha inválidos" });
       }
-  
+
       console.log("Usuário encontrado:", user);
-  
+
       const isPasswordValid = await bcrypt.compare(password, user.password);
       console.log("Senha válida?", isPasswordValid);
-  
+
       if (!isPasswordValid) {
         return rep.status(401).send({ message: "Email ou senha inválidos" });
       }
-  
+
       const token = jwt.sign({ userId: user.id }, "secreta-chave", { expiresIn: "1h" });
       console.log("Token gerado:", token);
-  
+
       return rep.send({ token });
     } catch (error) {
       console.error("Erro no login:", error);
       return rep.status(500).send({ message: "Erro no servidor" });
     }
   });
-  
 
-  // Rota protegida para obter informações do usuário autenticado
   app.get("/me", async (req, rep) => {
     try {
       const authHeader = req.headers.authorization;
@@ -80,10 +76,15 @@ export async function authRoutes(app: FastifyInstance) {
       }
 
       const token = authHeader.split(" ")[1];
-      const decoded: any = verifyToken(token);
 
+      // 🔥 Alterado para usar jwt.verify diretamente
+      const decoded: any = jwt.verify(token, "secreta-chave");
+
+      console.log("Decoded token:", decoded);
+
+      // 🔥 Correção: Usando "userId" em vez de "id"
       const user = await prisma.user.findUnique({
-        where: { id: decoded.id },
+        where: { id: decoded.userId },
         select: { id: true, name: true, email: true, createdAt: true },
       });
 
@@ -93,6 +94,7 @@ export async function authRoutes(app: FastifyInstance) {
 
       return rep.send(user);
     } catch (error) {
+      console.error("Erro ao validar token:", error);
       return rep.code(401).send({ message: "Token inválido ou expirado" });
     }
   });

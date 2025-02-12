@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { prisma } from "../lib/prisma";
+import { authenticate } from "../middlewares/authMiddleware";
 
 export async function employeeRoutes(app: FastifyInstance) {
   const paramsSchema = z.object({
@@ -14,7 +15,7 @@ export async function employeeRoutes(app: FastifyInstance) {
     status: z.enum(["Ativo", "Inativo"]),
   });
 
-  // Listar funcionários
+  app.addHook("preHandler", authenticate);
   app.get("/employees", async () => {
     const employees = await prisma.employee.findMany({
       select: {
@@ -23,19 +24,28 @@ export async function employeeRoutes(app: FastifyInstance) {
         role: true,
         baseSalary: true,
         status: true,
+        transactions: true, 
       },
+     
     });
 
     return employees;
   });
 
-  // Obter um funcionário pelo ID
+  // Obter um funcionário pelo ID junto com suas transações
   app.get("/employees/:id", async (req, rep) => {
     const { id } = paramsSchema.parse(req.params);
 
-    const employee = await prisma.employee.findUniqueOrThrow({
+    const employee = await prisma.employee.findUnique({
       where: { id },
+      include: {
+        transactions: true, // Adiciona as transações vinculadas ao funcionário
+      },
     });
+
+    if (!employee) {
+      return rep.code(404).send({ message: "Funcionário não encontrado" });
+    }
 
     return employee;
   });
@@ -102,16 +112,21 @@ export async function employeeRoutes(app: FastifyInstance) {
     return transactions;
   });
 
-  // Adicionar crédito ou débito ao funcionário
   app.post("/employees/:id/transactions", async (req, rep) => {
     const { id } = paramsSchema.parse(req.params);
-    
+
     const transactionSchema = z.object({
       type: z.enum(["Crédito", "Débito"]),
       amount: z.coerce.number(),
     });
 
     const { type, amount } = transactionSchema.parse(req.body);
+
+    // Verifica se o funcionário existe
+    const employee = await prisma.employee.findUnique({ where: { id } });
+    if (!employee) {
+      return rep.code(404).send({ message: "Funcionário não encontrado" });
+    }
 
     const transaction = await prisma.transaction.create({
       data: {

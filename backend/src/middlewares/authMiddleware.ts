@@ -1,7 +1,11 @@
-import { FastifyReply, FastifyRequest } from "fastify";
-import { verifyToken } from "../lib/auth";
+import { FastifyRequest, FastifyReply } from "fastify";
+import jwt from "jsonwebtoken";
 
-export async function authMiddleware(req: FastifyRequest, rep: FastifyReply) {
+interface AuthenticatedRequest extends FastifyRequest {
+  user?: { id: number };
+}
+
+async function authenticate(req: AuthenticatedRequest, rep: FastifyReply) {
   try {
     const authHeader = req.headers.authorization;
 
@@ -10,10 +14,12 @@ export async function authMiddleware(req: FastifyRequest, rep: FastifyReply) {
     }
 
     const token = authHeader.split(" ")[1];
-    const decoded = verifyToken(token);
+    const decoded: any = jwt.verify(token, "secreta-chave");
 
-    req.user = decoded;
+    req.user = { id: decoded.userId }; 
   } catch (error) {
     return rep.code(401).send({ message: "Token inválido ou expirado" });
   }
 }
+
+export { authenticate };

@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { prisma } from "../lib/prisma";
+import { authenticate } from "../middlewares/authMiddleware";
 
 export async function companyRoutes(app: FastifyInstance) {
   const paramsSchema = z.object({
@@ -16,6 +17,9 @@ export async function companyRoutes(app: FastifyInstance) {
     responsible: z.string(),
     commission: z.coerce.number(),
   });
+
+  // 🔒 Protege todas as rotas da empresa
+  app.addHook("preHandler", authenticate);
 
   // Listar todas as empresas
   app.get("/company", async () => {

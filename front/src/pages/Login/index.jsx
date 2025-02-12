@@ -1,9 +1,12 @@
+// src/pages/LoginAndRegister/index.js
 import React from 'react'
-import { Card, Tabs, Button, Input, Form, Typography } from 'antd'
+import { Card, Tabs, Button, Input, Form, Typography, message } from 'antd'
 import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons'
 import './styles.css'
 import loginImage from '../../components/assets/login.jpg'
 import { useNavigate } from 'react-router-dom'
+import { api } from '../../lib'
+import axios from 'axios'
 
 const { Title } = Typography
 
@@ -12,12 +15,35 @@ export default function LoginAndRegister() {
   const [registerForm] = Form.useForm()
   const navigate = useNavigate()
 
-  const handleLogin = () => {
-    navigate('/')
+  // Função para o login
+  const handleLogin = async (values) => {
+    try {
+      const response = await axios.post('http://localhost:3333/login', {
+        username: values.username,
+        password: values.password,
+      })
+      console.log(response.data) // Exibe a resposta da API
+      // Salve o token de autenticação no localStorage ou cookie
+      localStorage.setItem('token', response.data.token)
+    } catch (error) {
+      console.error('Erro ao fazer login', error)
+    }
   }
 
-  const handleRegister = (values) => {
-    console.log('Cadastro:', values)
+  // Função para o registro
+  const handleRegister = async (values) => {
+    try {
+      await api.post('/auth/register', {
+        name: values.name,
+        email: values.email,
+        password: values.password,
+      })
+      message.success('Cadastro bem-sucedido!')
+      navigate('/login') // Redireciona para a tela de login após o cadastro
+    } catch (error) {
+      console.error('Erro ao cadastrar:', error)
+      message.error('Erro ao cadastrar. Tente novamente.')
+    }
   }
 
   return (
