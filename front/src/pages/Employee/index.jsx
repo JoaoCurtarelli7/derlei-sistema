@@ -1,53 +1,63 @@
-import React, { useState } from 'react'
-import { Card, Table, Button, Tag, Typography } from 'antd'
+import React, { useCallback, useEffect, useState } from 'react'
+import { Card, Table, Button, Tag, Typography, message } from 'antd'
 import { useNavigate } from 'react-router-dom'
 import AddEmployeeModal from '../../components/Modal/Employee'
+import api from '../../lib/api'
+import { FaEdit, FaTrash } from 'react-icons/fa'
 
 const { Title } = Typography
 
 export default function EmployeeList() {
   const navigate = useNavigate()
+  const [data, setData] = useState([])
+  const [editingEmployee, setEditingEmployee] = useState(null)
 
-  const [data, setData] = useState([
-    {
-      key: '1',
-      nome: 'Robson Silva',
-      cargo: 'Motorista',
-      salarioBase: 'R$ 2.700,00',
-      status: 'Ativo',
+  // Carrega a lista de funcionários
+  useEffect(() => {
+    api.get('/employees').then((response) => {
+      setData(response.data)
+    })
+  }, [])
+
+  const addEmployee = (newEmployee) => {
+    if (editingEmployee) {
+      const updatedData = data.map((employee) =>
+        employee.id === newEmployee.id ? newEmployee : employee,
+      )
+      setData(updatedData)
+    } else {
+      setData([...data, newEmployee])
+    }
+  }
+
+  const handleRemove = useCallback(
+    (id) => {
+      api.delete(`/employees/${id}`).then(() => {
+        const updatedData = data.filter((employee) => employee.id !== id)
+        setData(updatedData)
+        message.success('Funcionário removido com sucesso!')
+      })
     },
-    {
-      key: '2',
-      nome: 'Maria Oliveira',
-      cargo: 'Administrativo',
-      salarioBase: 'R$ 3.200,00',
-      status: 'Ativo',
-    },
-    {
-      key: '3',
-      nome: 'Carlos Andrade',
-      cargo: 'Técnico',
-      salarioBase: 'R$ 2.800,00',
-      status: 'Inativo',
-    },
-  ])
+    [data],
+  )
 
   const columns = [
     {
       title: 'Nome',
-      dataIndex: 'nome',
-      key: 'nome',
+      dataIndex: 'name',
+      key: 'name',
     },
     {
       title: 'Cargo',
-      dataIndex: 'cargo',
-      key: 'cargo',
+      dataIndex: 'role',
+      key: 'role',
     },
     {
       title: 'Salário Base',
-      dataIndex: 'salarioBase',
-      key: 'salarioBase',
+      dataIndex: 'baseSalary',
+      key: 'baseSalary',
       align: 'right',
+      render: (value) => `R$ ${value.toFixed(2)}`,
     },
     {
       title: 'Status',
@@ -64,16 +74,26 @@ export default function EmployeeList() {
       title: 'Ações',
       key: 'acoes',
       render: (_, record) => (
-        <Button type="link" onClick={() => navigate(`/employee/${record.key}`)}>
-          Detalhes
-        </Button>
+        <>
+          <Button
+            type="link"
+            onClick={() => navigate(`/employee/${record.id}`)}
+          >
+            Detalhes
+          </Button>
+
+          <FaEdit
+            style={{ cursor: 'pointer', marginRight: '10px' }}
+            onClick={() => setEditingEmployee(record)}
+          />
+          <FaTrash
+            style={{ cursor: 'pointer' }}
+            onClick={() => handleRemove(record.id)}
+          />
+        </>
       ),
     },
   ]
-
-  const addEmployee = (newEmployee) => {
-    setData((prevData) => [...prevData, newEmployee])
-  }
 
   return (
     <Card
@@ -89,15 +109,18 @@ export default function EmployeeList() {
         Lista de Funcionários
       </Title>
 
-      <Button type="primary" style={{ marginBottom: '20px' }}>
-        <AddEmployeeModal addEmployee={addEmployee} />
-      </Button>
+      <AddEmployeeModal
+        addEmployee={addEmployee}
+        editingEmployee={editingEmployee}
+        setEditingEmployee={setEditingEmployee}
+      />
 
       <Table
         dataSource={data}
         columns={columns}
         pagination={{ pageSize: 5 }}
         style={{ fontFamily: 'Arial, sans-serif', marginTop: '20px' }}
+        rowKey="id"
       />
     </Card>
   )

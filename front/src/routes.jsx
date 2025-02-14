@@ -14,6 +14,7 @@ import UserProfile from './pages/UserProfile'
 import TripList from './pages/Vehicle/Trip'
 import Months from './pages/Closing/Month'
 import TripExpenses from './pages/Vehicle/TripExpenses'
+import { UserProvider } from './context/userContext'
 
 const router = createBrowserRouter([
   {
@@ -21,64 +22,27 @@ const router = createBrowserRouter([
     element: <Layout />,
     children: [
       { path: '/', element: <Home /> },
-      {
-        path: '/closing',
-        element: <Closing />,
-      },
-      {
-        path: '/closing-month',
-        element: <Months />,
-      },
-      {
-        path: '/load',
-        element: <LoadCompanies />,
-      },
-      {
-        path: '/load/:id',
-        element: <Load />,
-      },
-      {
-        path: '/companies',
-        element: <CompanyList />,
-      },
-      {
-        path: '/employee',
-        element: <EmployeeList />,
-      },
-      {
-        path: '/employee/:id',
-        element: <EmployeeDetails />,
-      },
-      {
-        path: '/vehicle-maintenance',
-        element: <VehicleList />,
-      },
-      {
-        path: '/vehicle-maintenance/:id',
-        element: <VehicleMaintenance />,
-      },
-      {
-        path: '/login',
-        element: <Login />,
-      },
-      {
-        path: '/user-profile',
-        element: <UserProfile />,
-      },
-      {
-        path: '/vehicle/trip',
-        element: <TripList />,
-      },
-      {
-        path: '/vehicle/trip-expenses/:id',
-        element: <TripExpenses />,
-      },
+      { path: '/closing', element: <Closing /> },
+      { path: '/closing-month', element: <Months /> },
+      { path: '/load', element: <LoadCompanies /> },
+      { path: '/load/:id', element: <Load /> },
+      { path: '/companies', element: <CompanyList /> },
+      { path: '/employee', element: <EmployeeList /> },
+      { path: '/employee/:id', element: <EmployeeDetails /> },
+      { path: '/vehicle-maintenance', element: <VehicleList /> },
+      { path: '/vehicle-maintenance/:id', element: <VehicleMaintenance /> },
+      { path: '/login', element: <Login /> },
+      { path: '/user-profile', element: <UserProfile /> },
+      { path: '/vehicle/trip', element: <TripList /> },
+      { path: '/vehicle/trip-expenses/:id', element: <TripExpenses /> },
     ],
   },
 ])
 
-function AppRoutes() {
-  return <RouterProvider router={router} />
+export default function AppRoutes() {
+  return (
+    <UserProvider>
+      <RouterProvider router={router} />
+    </UserProvider>
+  )
 }
-
-export default AppRoutes

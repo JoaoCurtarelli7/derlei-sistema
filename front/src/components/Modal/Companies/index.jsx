@@ -1,5 +1,16 @@
 import React, { useEffect } from 'react'
-import { Modal, Form, Input, Button, InputNumber } from 'antd'
+import {
+  Modal,
+  Form,
+  Input,
+  Button,
+  InputNumber,
+  message,
+  DatePicker,
+  Select,
+} from 'antd'
+import moment from 'moment'
+import api from '../../../lib/api'
 
 export default function AddCompanyModal({
   isModalVisible,
@@ -11,37 +22,56 @@ export default function AddCompanyModal({
 }) {
   const [form] = Form.useForm()
 
-  // Preencher o formulário com os dados da empresa quando o modal for aberto
   useEffect(() => {
     if (editingCompany) {
-      form.setFieldsValue(editingCompany) // Preenche os campos com os valores da empresa a ser editada
+      const formattedCompany = {
+        ...editingCompany,
+        dateRegistration: moment(editingCompany.dateRegistration),
+      }
+      form.setFieldsValue(formattedCompany)
     } else {
-      form.resetFields() // Reseta os campos caso seja um novo cadastro
+      form.resetFields()
     }
   }, [editingCompany, form])
 
-  // Função para adicionar ou editar a empresa
-  const handleSubmit = (values) => {
-    if (editingCompany) {
-      // Editar a empresa
-      const updatedData = data.map((company) =>
-        company.key === editingCompany.key
-          ? { ...company, ...values, comissao: values.comissao ? 'Sim' : 'Não' }
-          : company,
-      )
-      setData(updatedData)
-    } else {
-      // Adicionar nova empresa
-      const newCompany = {
-        key: (data.length + 1).toString(),
+  const handleSubmit = async (values) => {
+    try {
+      const formattedValues = {
         ...values,
-        dataCadastro: new Date().toLocaleDateString(),
-        comissao: values.comissao ? 'Sim' : 'Não',
+        dateRegistration: values.dateRegistration.format('YYYY-MM-DD'),
       }
-      setData([...data, newCompany])
+
+      if (editingCompany) {
+        const response = await api.put(
+          `/company/${editingCompany.id}`,
+          formattedValues,
+        )
+        const updatedCompany = response.data
+
+        const updatedData = data.map((company) =>
+          company.id === editingCompany.id ? updatedCompany : company,
+        )
+        setData(updatedData)
+
+        message.success('Empresa atualizada com sucesso!')
+      } else {
+        const response = await api.post('/company', formattedValues)
+        const newCompany = response.data
+
+        setData([...data, newCompany])
+
+        message.success('Empresa cadastrada com sucesso!')
+      }
+
+      setIsModalVisible(false)
+      setEditingCompany(null)
+    } catch (error) {
+      console.error('Erro ao salvar empresa:', error)
+      message.error(
+        error.response?.data?.message ||
+          'Erro ao salvar empresa. Tente novamente.',
+      )
     }
-    setIsModalVisible(false)
-    setEditingCompany(null) // Limpar a empresa que está sendo editada após salvar
   }
 
   return (
@@ -50,14 +80,14 @@ export default function AddCompanyModal({
       visible={isModalVisible}
       onCancel={() => {
         setIsModalVisible(false)
-        setEditingCompany(null) // Limpar quando o modal for fechado
+        setEditingCompany(null) // Limpa a empresa que está sendo editada ao fechar o modal
       }}
       footer={null}
     >
       <Form form={form} onFinish={handleSubmit} layout="vertical">
         <Form.Item
           label="Nome"
-          name="nome"
+          name="name"
           rules={[
             { required: true, message: 'Por favor, insira o nome da empresa!' },
           ]}
@@ -67,7 +97,7 @@ export default function AddCompanyModal({
 
         <Form.Item
           label="Tipo"
-          name="tipo"
+          name="type"
           rules={[
             { required: true, message: 'Por favor, insira o tipo da empresa!' },
           ]}
@@ -85,7 +115,7 @@ export default function AddCompanyModal({
 
         <Form.Item
           label="Responsável"
-          name="responsavel"
+          name="responsible"
           rules={[
             { required: true, message: 'Por favor, insira o responsável!' },
           ]}
@@ -95,7 +125,7 @@ export default function AddCompanyModal({
 
         <Form.Item
           label="Comissão (%)"
-          name="comissao"
+          name="commission"
           rules={[
             {
               required: true,
@@ -104,6 +134,19 @@ export default function AddCompanyModal({
           ]}
         >
           <InputNumber min={0} max={100} />
+        </Form.Item>
+
+        <Form.Item
+          label="Data de Cadastro"
+          name="dateRegistration"
+          rules={[
+            {
+              required: true,
+              message: 'Por favor, insira a data de cadastro!',
+            },
+          ]}
+        >
+          <DatePicker format="YYYY-MM-DD" style={{ width: '100%' }} />
         </Form.Item>
 
         <Form.Item
@@ -117,7 +160,18 @@ export default function AddCompanyModal({
             },
           ]}
         >
-          <Input />
+          <Select
+            options={[
+              {
+                label: 'Ativo',
+                value: 'Ativo',
+              },
+              {
+                label: 'Inativo',
+                value: 'Inativo',
+              },
+            ]}
+          ></Select>
         </Form.Item>
 
         <Form.Item>

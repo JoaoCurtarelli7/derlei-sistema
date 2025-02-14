@@ -1,47 +1,78 @@
 import React, { useState } from 'react'
 import { Modal, Form, Input, Button, Select, InputNumber, message } from 'antd'
+import api from '../../../lib/api'
 
 const { Option } = Select
 
-export default function AddEmployeeModal() {
+export default function AddEmployeeModal({
+  addEmployee,
+  editingEmployee,
+  setEditingEmployee,
+}) {
   const [isModalVisible, setIsModalVisible] = useState(false)
   const [form] = Form.useForm()
 
+  // Abre o modal e preenche os campos se estiver editando
   const showModal = () => {
     setIsModalVisible(true)
+    if (editingEmployee) {
+      form.setFieldsValue({
+        nome: editingEmployee.name,
+        cargo: editingEmployee.role,
+        salarioBase: editingEmployee.baseSalary,
+        status: editingEmployee.status,
+      })
+    } else {
+      form.resetFields()
+    }
   }
 
-  const handleOk = () => {
-    form
-      .validateFields()
-      .then((values) => {
-        console.log('Employee Added:', values)
-
-        // Example: you would send the data to an API or state management here
-        message.success('Funcionário adicionado com sucesso!')
-
-        // Optionally, redirect after adding an employee
-        // navigate(`/employee/${values.name}`)
-
-        setIsModalVisible(false)
-        form.resetFields()
-      })
-      .catch((errorInfo) => {
-        console.log('Failed:', errorInfo)
-      })
-  }
-
+  // Fecha o modal e limpa o estado de edição
   const handleCancel = () => {
     setIsModalVisible(false)
+    setEditingEmployee(null)
+  }
+
+  const handleOk = async () => {
+    try {
+      const values = await form.validateFields()
+
+      if (editingEmployee) {
+        const response = await api.put(`/employees/${editingEmployee.id}`, {
+          name: values.nome,
+          role: values.cargo,
+          baseSalary: values.salarioBase,
+          status: values.status,
+        })
+        addEmployee(response.data)
+        message.success('Funcionário atualizado com sucesso!')
+      } else {
+        // Adicionar novo funcionário (POST)
+        const response = await api.post('/employees', {
+          name: values.nome,
+          role: values.cargo,
+          baseSalary: values.salarioBase,
+          status: values.status,
+        })
+        addEmployee(response.data)
+        message.success('Funcionário adicionado com sucesso!')
+      }
+
+      setIsModalVisible(false)
+      form.resetFields()
+    } catch (error) {
+      console.error('Erro ao salvar funcionário:', error)
+      message.error('Erro ao salvar funcionário. Tente novamente.')
+    }
   }
 
   return (
     <div>
       <Button type="primary" onClick={showModal}>
-        Adicionar Funcionário
+        {editingEmployee ? 'Editar Funcionário' : 'Adicionar Funcionário'}
       </Button>
       <Modal
-        title="Adicionar Funcionário"
+        title={editingEmployee ? 'Editar Funcionário' : 'Adicionar Funcionário'}
         visible={isModalVisible}
         onOk={handleOk}
         onCancel={handleCancel}
@@ -111,7 +142,7 @@ export default function AddEmployeeModal() {
               onClick={handleOk}
               style={{ marginTop: '10px' }}
             >
-              Adicionar
+              {editingEmployee ? 'Salvar Alterações' : 'Adicionar'}
             </Button>
           </Form.Item>
         </Form>

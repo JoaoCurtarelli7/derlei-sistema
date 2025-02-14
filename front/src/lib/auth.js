@@ -10,7 +10,6 @@ export const logout = () => {
   removeToken() // Remove o token do cookie
 }
 
-// Função de verificação de autenticação
 export const isAuthenticated = () => {
   const token = getToken()
   return !!token // Retorna true se houver um token válido

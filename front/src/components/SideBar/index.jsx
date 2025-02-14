@@ -14,8 +14,11 @@ import Dropdown from 'react-bootstrap/Dropdown'
 import user from '../assets/user.png'
 import moment from 'moment'
 import './styles.css'
+import { useUserContext } from '../../context/userContext'
 
 export default function AppSidebar() {
+  const { user: userContext } = useUserContext()
+
   const currentHour = moment().hour()
 
   let greeting = 'Bom dia'
@@ -32,7 +35,9 @@ export default function AppSidebar() {
           to="/"
           className="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none"
         >
-          <span className="fs-4">{greeting}, Derlei</span>
+          <span className="fs-4">
+            {greeting}, {userContext?.name}
+          </span>
         </Link>
         <hr />
 
@@ -105,11 +110,11 @@ export default function AppSidebar() {
               height="32"
               className="rounded-circle me-2"
             />
-            <strong style={{ margin: ' 010px' }}> Derlei</strong>
+            <strong style={{ margin: ' 010px' }}>Perfil</strong>
           </Dropdown.Toggle>
 
           <Dropdown.Menu variant="dark" className="dropdown-menu-custom">
-            <Dropdown.Item href="/user-profile">Profile</Dropdown.Item>
+            <Dropdown.Item href="/user-profile">Conta</Dropdown.Item>
             <Dropdown.Divider />
             <Dropdown.Item href="/login">Sair</Dropdown.Item>
           </Dropdown.Menu>

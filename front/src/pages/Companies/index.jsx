@@ -1,5 +1,14 @@
-import React, { useState, useEffect } from 'react'
-import { Table, Tag, Button, Card, Input, Space, Typography } from 'antd'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import {
+  Table,
+  Tag,
+  Button,
+  Card,
+  Input,
+  Space,
+  Typography,
+  message,
+} from 'antd'
 import AddCompanyModal from '../../components/Modal/Companies'
 import { FaEdit, FaTrash } from 'react-icons/fa'
 import api from '../../lib/api'
@@ -11,42 +20,11 @@ export default function CompanyList() {
   const [filteredData, setFilteredData] = useState([])
   const [isModalVisible, setIsModalVisible] = useState(false)
   const [editingCompany, setEditingCompany] = useState(null) // Para controlar a empresa que está sendo editada
-  const [data, setData] = useState([
-    {
-      key: '1',
-      nome: 'Empresa Alpha',
-      tipo: 'TI',
-      cnpj: '12.345.678/0001-99',
-      dataCadastro: '01/01/2023',
-      status: 'Ativo',
-      responsavel: 'João',
-      comissao: '3',
-    },
-    {
-      key: '2',
-      nome: 'Empresa Beta',
-      tipo: 'Consultoria',
-      cnpj: '98.765.432/0001-88',
-      dataCadastro: '15/03/2023',
-      status: 'Inativo',
-      responsavel: 'Maria',
-      comissao: '2',
-    },
-    {
-      key: '3',
-      nome: 'Empresa Gamma',
-      tipo: 'Educação',
-      cnpj: '11.222.333/0001-55',
-      dataCadastro: '10/06/2023',
-      status: 'Ativo',
-      responsavel: 'Carlos',
-      comissao: '4',
-    },
-  ])
+  const [data, setData] = useState([])
 
   useEffect(() => {
     api.get('/company').then((response) => {
-      console.log(response.data)
+      setData(response.data)
     })
   }, [])
   useEffect(() => {
@@ -60,72 +38,92 @@ export default function CompanyList() {
     }
   }, [searchText, data])
 
-  // Definindo as colunas da tabela
-  const columns = [
-    {
-      title: 'Nome',
-      dataIndex: 'nome',
-      key: 'nome',
-      sorter: (a, b) => a.nome.localeCompare(b.nome),
-    },
-    {
-      title: 'Tipo',
-      dataIndex: 'tipo',
-      key: 'tipo',
-      sorter: (a, b) => a.tipo.localeCompare(b.tipo),
-    },
-    {
-      title: 'CNPJ',
-      dataIndex: 'cnpj',
-      key: 'cnpj',
-    },
-    {
-      title: 'Data de Cadastro',
-      dataIndex: 'dataCadastro',
-      key: 'dataCadastro',
-      sorter: (a, b) => new Date(a.dataCadastro) - new Date(b.dataCadastro),
-    },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status) =>
-        status === 'Ativo' ? (
-          <Tag color="green">{status}</Tag>
-        ) : (
-          <Tag color="red">{status}</Tag>
-        ),
-    },
-    {
-      title: 'Comissão',
-      dataIndex: 'comissao',
-      key: 'comissao',
-    },
-    {
-      title: 'Responsável',
-      dataIndex: 'responsavel',
-      key: 'responsavel',
-    },
-    {
-      title: 'Ações',
-      key: 'acoes',
-      render: (_, record) => (
-        <>
-          <FaEdit
-            style={{ cursor: 'pointer', marginRight: '10px' }}
-            onClick={() => handleEdit(record)}
-          />
-
-          <FaTrash style={{ cursor: 'pointer' }} />
-        </>
-      ),
-    },
-  ]
-
-  const handleEdit = (company) => {
+  const handleEdit = useCallback((company) => {
     setEditingCompany(company)
     setIsModalVisible(true)
-  }
+  }, [])
+
+  const handleRemove = useCallback(
+    (id) => {
+      api.delete(`/company/${id}`).then(() => {
+        const updatedData = data.filter((company) => company.id !== id)
+        setData(updatedData)
+        setIsModalVisible(false)
+        setEditingCompany(null)
+        message.success('Empresa removida com sucesso!')
+      })
+    },
+    [data],
+  )
+
+  const columns = useMemo(
+    () => [
+      {
+        title: 'Nome',
+        dataIndex: 'name',
+        key: 'name',
+        sorter: (a, b) => a.name.localeCompare(b.name),
+      },
+      {
+        title: 'Tipo',
+        dataIndex: 'type',
+        key: 'type',
+        sorter: (a, b) => a.type.localeCompare(b.type),
+      },
+      {
+        title: 'CNPJ',
+        dataIndex: 'cnpj',
+        key: 'cnpj',
+      },
+      {
+        title: 'Data de Cadastro',
+        dataIndex: 'dateRegistration',
+        key: 'dateRegistration',
+        render: (dateRegistration) =>
+          new Date(dateRegistration).toLocaleDateString(),
+        sorter: (a, b) =>
+          new Date(a.dateRegistration) - new Date(b.dateRegistration),
+      },
+      {
+        title: 'Status',
+        dataIndex: 'status',
+        key: 'status',
+        render: (status) =>
+          status === 'Ativo' ? (
+            <Tag color="green">{status}</Tag>
+          ) : (
+            <Tag color="red">{status}</Tag>
+          ),
+      },
+      {
+        title: 'Comissão',
+        dataIndex: 'commission',
+        key: 'commission',
+      },
+      {
+        title: 'Responsável',
+        dataIndex: 'responsible',
+        key: 'responsible',
+      },
+      {
+        title: 'Ações',
+        render: (_, record) => (
+          <>
+            <FaEdit
+              style={{ cursor: 'pointer', marginRight: '10px' }}
+              onClick={() => handleEdit(record)}
+            />
+
+            <FaTrash
+              style={{ cursor: 'pointer' }}
+              onClick={() => handleRemove(record.id)}
+            />
+          </>
+        ),
+      },
+    ],
+    [handleEdit, handleRemove],
+  )
 
   return (
     <Card
@@ -168,6 +166,7 @@ export default function CompanyList() {
         pagination={{ pageSize: 5 }}
         bordered
         style={{ fontFamily: 'Arial, sans-serif' }}
+        rowKey="id"
       />
 
       <AddCompanyModal
