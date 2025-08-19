@@ -1,41 +1,88 @@
-import React, { useState } from 'react'
-import { Card, Table, Typography, Button, message } from 'antd'
-import { useParams } from 'react-router-dom'
-import VehicleMaintenanceModal from '../../../components/Modal/MainTenanceVehicle'
-import { FaEdit, FaTrash } from 'react-icons/fa'
+import { useEffect, useState } from 'react';
+import { Card, Table, Typography, Button, message } from 'antd';
+import { useParams } from 'react-router-dom';
+import VehicleMaintenanceModal from '../../../components/Modal/MainTenanceVehicle';
+import { FaEdit, FaTrash } from 'react-icons/fa';
+import { api } from '../../../lib';
 
-const { Title } = Typography
+const { Title } = Typography;
 
 export default function VehicleMaintenanceList() {
-  const { id } = useParams()
-  const [maintenanceData, setMaintenanceData] = useState([
-    {
-      key: '1',
-      data: '18/08/2021',
-      servico: 'Troca água e aditivo',
-      km: 207807,
-      valor: 150.0,
-    },
-    {
-      key: '2',
-      data: '15/09/2021',
-      servico: 'Troca lonas traseiras',
-      km: 207807,
-      valor: 400.0,
-    },
-    {
-      key: '3',
-      data: '27/11/2021',
-      servico: 'Troca óleo motor',
-      km: 241947,
-      valor: 350.0,
-    },
-  ])
+  const { id } = useParams(); // id do caminhão
+  const [maintenanceData, setMaintenanceData] = useState([]);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [editingMaintenance, setEditingMaintenance] = useState(null);
 
-  const [isModalVisible, setIsModalVisible] = useState(false)
-  const [editingMaintenance, setEditingMaintenance] = useState(null) // Track the maintenance being edited
+  // Total gasto calculado
+  const totalGasto = maintenanceData.reduce((acc, curr) => acc + curr.valor, 0);
 
-  const totalGasto = maintenanceData.reduce((acc, curr) => acc + curr.valor, 0)
+  // Carregar manutenções do caminhão
+  const fetchMaintenance = async () => {
+    try {
+      const response = await api.get(`/trucks/${id}/maintenances`);
+      setMaintenanceData(response.data);
+    } catch (error) {
+      console.error(error);
+      message.error('Erro ao carregar manutenções');
+    }
+  };
+
+  useEffect(() => {
+    fetchMaintenance();
+  }, [id]);
+
+  // Adicionar manutenção
+  const handleAddMaintenance = async (values) => {
+    try {
+      const response = await api.post(`/trucks/${id}/maintenances`, values);
+      setMaintenanceData((prev) => [...prev, response.data]);
+      setIsModalVisible(false);
+      message.success('Manutenção adicionada com sucesso!');
+    } catch (error) {
+      console.error(error);
+      message.error('Erro ao adicionar manutenção');
+    }
+  };
+
+  // Editar manutenção
+  const handleEditMaintenance = async (values) => {
+    try {
+      const response = await api.put(
+        `/trucks/${id}/maintenances/${editingMaintenance.id}`,
+        values
+      );
+      setMaintenanceData((prev) =>
+        prev.map((item) =>
+          item.id === editingMaintenance.id ? response.data : item
+        )
+      );
+      setIsModalVisible(false);
+      setEditingMaintenance(null);
+      message.success('Manutenção atualizada com sucesso!');
+    } catch (error) {
+      console.error(error);
+      message.error('Erro ao atualizar manutenção');
+    }
+  };
+
+  // Deletar manutenção
+  const handleDelete = async (maintenanceId) => {
+    try {
+      await api.delete(`/trucks/${id}/maintenances/${maintenanceId}`);
+      setMaintenanceData((prev) =>
+        prev.filter((item) => item.id !== maintenanceId)
+      );
+      message.success('Manutenção removida com sucesso!');
+    } catch (error) {
+      console.error(error);
+      message.error('Erro ao remover manutenção');
+    }
+  };
+
+  const handleEdit = (record) => {
+    setEditingMaintenance(record);
+    setIsModalVisible(true);
+  };
 
   const columns = [
     { title: 'Data', dataIndex: 'data', key: 'data' },
@@ -52,43 +99,13 @@ export default function VehicleMaintenanceList() {
             style={{ cursor: 'pointer', marginRight: '10px' }}
           />
           <FaTrash
-            onClick={() => handleDelete(record.key)}
+            onClick={() => handleDelete(record.id)}
             style={{ cursor: 'pointer' }}
           />
         </>
       ),
     },
-  ]
-
-  const handleAddMaintenance = (values) => {
-    const newMaintenance = {
-      key: Date.now().toString(),
-      ...values,
-    }
-    setMaintenanceData((prevData) => [...prevData, newMaintenance])
-    setIsModalVisible(false)
-    message.success('Manutenção adicionada com sucesso!')
-  }
-
-  const handleEdit = (record) => {
-    setEditingMaintenance(record) // Set the maintenance to be edited
-    setIsModalVisible(true) // Show the modal
-  }
-
-  const handleDelete = (key) => {
-    setMaintenanceData(maintenanceData.filter((item) => item.key !== key))
-    message.success('Manutenção removida com sucesso!')
-  }
-
-  const handleEditMaintenance = (values) => {
-    const updatedData = maintenanceData.map((item) =>
-      item.key === editingMaintenance.key ? { ...item, ...values } : item,
-    )
-    setMaintenanceData(updatedData)
-    setIsModalVisible(false)
-    setEditingMaintenance(null)
-    message.success('Manutenção atualizada com sucesso!')
-  }
+  ];
 
   return (
     <Card style={{ margin: '20px', padding: '20px' }} bordered>
@@ -106,6 +123,7 @@ export default function VehicleMaintenanceList() {
         dataSource={maintenanceData}
         columns={columns}
         pagination={{ pageSize: 5 }}
+        rowKey="id"
         footer={() => (
           <div style={{ textAlign: 'right', fontWeight: 'bold' }}>
             Total Gasto: R$ {totalGasto.toFixed(2)}
@@ -118,8 +136,8 @@ export default function VehicleMaintenanceList() {
         onCancel={() => setIsModalVisible(false)}
         onAddMaintenance={handleAddMaintenance}
         onEditMaintenance={handleEditMaintenance}
-        editingMaintenance={editingMaintenance} // Pass the editing maintenance to the modal
+        editingMaintenance={editingMaintenance}
       />
     </Card>
-  )
+  );
 }

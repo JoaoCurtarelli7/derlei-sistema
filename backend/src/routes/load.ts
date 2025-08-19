@@ -106,7 +106,6 @@ export async function loadRoutes(app: FastifyInstance) {
   });
   
 
-  // Atualizar um carregamento/pedido
   app.put("/loads/:id", async (req, rep) => {
     const { id } = paramsSchema.parse(req.params);
     const {
@@ -123,10 +122,8 @@ export async function loadRoutes(app: FastifyInstance) {
     } = bodySchema.parse(req.body);
 
     try {
-      // Verificar se o carregamento existe
       const load = await prisma.load.findUniqueOrThrow({ where: { id } });
 
-      // Verificar se a empresa existe
       const companyExists = await prisma.company.findUnique({
         where: { id: companyId },
       });

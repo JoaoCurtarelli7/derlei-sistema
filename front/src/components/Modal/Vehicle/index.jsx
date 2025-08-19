@@ -1,94 +1,65 @@
-import React, { useEffect } from 'react'
-import { Modal, Form, Input, InputNumber } from 'antd'
+import { useEffect } from "react";
+import { Modal, Form, Input, InputNumber, DatePicker } from "antd";
+import dayjs from "dayjs";
 
-export default function VehicleMaintenanceModal({
-  visible,
-  onCancel,
-  onAddMaintenance,
-  onEditMaintenance,
-  editingMaintenance,
-}) {
-  const [form] = Form.useForm()
+export default function AddVehicleModal({ visible, onCancel, onSubmit, vehicle }) {
+  const [form] = Form.useForm();
 
   useEffect(() => {
-    if (editingMaintenance) {
-      form.setFieldsValue(editingMaintenance)
+    if (vehicle) {
+      form.setFieldsValue({
+        ...vehicle,
+        docExpiry: vehicle.docExpiry ? dayjs(vehicle.docExpiry) : null,
+      });
     } else {
-      form.resetFields()
+      form.resetFields();
     }
-  }, [editingMaintenance, form])
+  }, [vehicle, form]);
 
   const handleOk = () => {
-    form
-      .validateFields()
+    form.validateFields()
       .then((values) => {
-        if (editingMaintenance) {
-          onEditMaintenance(values)
-        } else {
-          onAddMaintenance(values)
-        }
-        form.resetFields()
+        if (values.docExpiry) values.docExpiry = values.docExpiry.toISOString();
+        onSubmit(values);
+        form.resetFields();
       })
-      .catch((info) => {
-        console.log('Validate Failed:', info)
-      })
-  }
+      .catch((err) => {
+        console.log("Validação falhou:", err);
+      });
+  };
 
   return (
     <Modal
-      title={editingMaintenance ? 'Editar Manutenção' : 'Adicionar Manutenção'}
+      title={vehicle ? "Editar Caminhão" : "Adicionar Caminhão"}
       visible={visible}
       onOk={handleOk}
       onCancel={onCancel}
-      okText={editingMaintenance ? 'Salvar' : 'Adicionar'}
+      okText={vehicle ? "Salvar" : "Adicionar"}
       cancelText="Cancelar"
     >
-      <Form form={form} layout="vertical" name="maintenanceForm">
-        <Form.Item
-          name="data"
-          label="Data"
-          rules={[
-            {
-              required: true,
-              message: 'Por favor, insira a data da manutenção',
-            },
-          ]}
-        >
+      <Form form={form} layout="vertical">
+        <Form.Item name="name" label="Nome" rules={[{ required: true }]}>
           <Input />
         </Form.Item>
-        <Form.Item
-          name="servico"
-          label="Serviço Realizado"
-          rules={[
-            {
-              required: true,
-              message: 'Por favor, insira o serviço realizado',
-            },
-          ]}
-        >
+        <Form.Item name="plate" label="Placa" rules={[{ required: true }]}>
           <Input />
         </Form.Item>
-        <Form.Item
-          name="km"
-          label="KM"
-          rules={[{ required: true, message: 'Por favor, insira o KM' }]}
-        >
-          <InputNumber style={{ width: '100%' }} min={0} step={1} />
+        <Form.Item name="brand" label="Marca" rules={[{ required: true }]}>
+          <Input />
         </Form.Item>
-        <Form.Item
-          name="valor"
-          label="Valor (R$)"
-          rules={[{ required: true, message: 'Por favor, insira o valor' }]}
-        >
-          <InputNumber
-            style={{ width: '100%' }}
-            min={0}
-            step={0.01}
-            prefix="R$ "
-            formatter={(value) => (value ? `R$ ${value}` : '')}
-          />
+        <Form.Item name="year" label="Ano" rules={[{ required: true }]}>
+          <InputNumber style={{ width: "100%" }} min={1900} max={2100} />
+        </Form.Item>
+        <Form.Item name="docExpiry" label="Vencimento do Documento" rules={[{ required: true }]}>
+          <DatePicker style={{ width: "100%" }} />
+        </Form.Item>
+        <Form.Item name="renavam" label="Renavam" rules={[{ required: true }]}>
+          <Input />
+        </Form.Item>
+        <Form.Item name="image" label="URL da Imagem">
+          <Input placeholder="URL da imagem do caminhão" />
         </Form.Item>
       </Form>
     </Modal>
-  )
+  );
 }

@@ -64,3 +64,46 @@ model Load {
   companyId     Int
   company       Company  @relation(fields: [companyId], references: [id])
 }
+
+model Truck {
+  id           Int           @id @default(autoincrement())
+  name         String
+  plate        String        @unique
+  brand        String
+  year         Int
+  docExpiry    DateTime
+  renavam      String
+  image        String?
+  maintenances Maintenance[]
+  trips        Trip[]
+}
+
+model Maintenance {
+  id      Int      @id @default(autoincrement())
+  date    DateTime
+  service String
+  km      Int
+  value   Float
+  notes   String?
+  truckId Int
+  truck   Truck    @relation(fields: [truckId], references: [id])
+}
+
+model Trip {
+  id           Int           @id @default(autoincrement())
+  destination  String
+  driver       String
+  date         DateTime
+  freightValue Float
+  truckId      Int
+  truck        Truck         @relation(fields: [truckId], references: [id])
+  expenses     TripExpense[]
+}
+
+model TripExpense {
+  id          Int    @id @default(autoincrement())
+  description String
+  amount      Float
+  tripId      Int
+  trip        Trip   @relation(fields: [tripId], references: [id])
+}

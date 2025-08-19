@@ -1,79 +1,67 @@
-import React, { useState } from 'react'
-import { Card, Button, Row, Col, message, Typography } from 'antd'
-import { useNavigate } from 'react-router-dom'
-import caminhaoLogo1 from '../../components/assets/caminhao_1.jfif'
-import caminhaoLogo2 from '../../components/assets/caminhao_2.jfif'
-import AddVehicleModal from '../../components/Modal/Vehicle'
+import { useEffect, useState } from "react";
+import { Card, Button, Row, Col, message, Typography } from "antd";
+import { useNavigate } from "react-router-dom";
+import AddVehicleModal from "../../components/Modal/Vehicle";
+import { api } from "../../lib";
 
-const { Title } = Typography
+const { Title } = Typography;
 
 export default function VehicleList() {
-  const navigate = useNavigate()
-  const [data, setData] = useState([
-    {
-      key: '1',
-      nome: 'Scania',
-      placa: 'ABC-1234',
-      marca: 'Scania',
-      ano: 2020,
-      vencimentoDoc: '03/2023',
-      renavam: '1090527699',
-      imagem: caminhaoLogo1,
-    },
-    {
-      key: '2',
-      nome: 'Volvo',
-      placa: 'XYZ-5678',
-      marca: 'Volvo',
-      ano: 2018,
-      vencimentoDoc: '08/2024',
-      renavam: '2098765432',
-      imagem: caminhaoLogo2,
-    },
-  ])
+  const navigate = useNavigate();
+  const [data, setData] = useState([]);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [currentVehicle, setCurrentVehicle] = useState(null);
 
-  const [isModalVisible, setIsModalVisible] = useState(false)
-  const [currentVehicle, setCurrentVehicle] = useState(null)
-
-  const handleAddVehicle = (values) => {
-    const newVehicle = {
-      key: Date.now().toString(),
-      ...values,
-      imagem:
-        values.imagem?.file?.response?.url ||
-        'https://via.placeholder.com/150?text=Novo+Caminhao',
+  // Carregar caminhões
+  const loadTrucks = async () => {
+    try {
+      const response = await api.get("/trucks");
+      setData(response.data);
+    } catch (error) {
+      console.error("Erro ao carregar os caminhões:", error);
+      message.error("Erro ao carregar os caminhões");
     }
-    setData((prevData) => [...prevData, newVehicle])
-    setIsModalVisible(false)
-    message.success('Caminhão adicionado com sucesso!')
-  }
+  };
+
+  useEffect(() => {
+    loadTrucks();
+  }, []);
+
+  // Adicionar ou editar caminhão
+  const handleSaveVehicle = async (values) => {
+    try {
+      if (currentVehicle?.id) {
+        // Editar
+        const response = await api.put(`/trucks/${currentVehicle.id}`, values);
+        setData((prev) =>
+          prev.map((v) => (v.id === currentVehicle.id ? response.data : v))
+        );
+        message.success("Caminhão atualizado com sucesso!");
+      } else {
+        // Adicionar
+        const response = await api.post("/trucks", values);
+        setData((prev) => [...prev, response.data]);
+        message.success("Caminhão adicionado com sucesso!");
+      }
+
+      setIsModalVisible(false);
+      setCurrentVehicle(null);
+    } catch (error) {
+      console.error("Erro ao salvar caminhão:", error);
+      message.error("Erro ao salvar caminhão");
+    }
+  };
 
   return (
-    <Card
-      style={{
-        margin: '20px',
-        padding: '20px',
-        borderRadius: '8px',
-        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-        backgroundColor: '#f9f9f9',
-      }}
-      bordered={false}
-    >
-      <Title level={3} style={{ color: '#333', marginBottom: '20px' }}>
-        Lista de Caminhões
-      </Title>
+    <Card style={{ margin: 20, padding: 20, borderRadius: 8 }}>
+      <Title level={3}>Lista de Caminhões</Title>
 
       <Button
         type="primary"
-        style={{
-          marginBottom: 16,
-          backgroundColor: '#4CAF50',
-          borderColor: '#4CAF50',
-          fontSize: '16px',
-        }}
+        style={{ marginBottom: 16 }}
         onClick={() => {
-          setCurrentVehicle(null)
-          setIsModalVisible(true)
+          setCurrentVehicle(null);
+          setIsModalVisible(true);
         }}
       >
         Adicionar Caminhão
@@ -81,62 +69,57 @@ export default function VehicleList() {
 
       <Row gutter={[16, 16]}>
         {data.map((vehicle) => (
-          <Col xs={24} sm={12} md={8} lg={6} key={vehicle.key}>
+          <Col xs={24} sm={12} md={8} lg={6} key={vehicle.id}>
             <Card
               hoverable
               cover={
                 <img
-                  alt={vehicle.nome}
-                  src={vehicle.imagem}
-                  style={{
-                    height: '200px',
-                    objectFit: 'cover',
-                    borderRadius: '8px',
-                    marginBottom: '10px',
-                  }}
+                  alt={vehicle.name}
+                  src={vehicle.image || "https://via.placeholder.com/150"}
+                  style={{ height: 200, objectFit: "cover" }}
                 />
               }
               actions={[
                 <Button
                   type="link"
-                  key={vehicle.key}
                   onClick={() =>
-                    navigate(`/vehicle-maintenance/${vehicle.key}`)
+                    navigate(`/vehicle-maintenance/${vehicle.id}`)
                   }
-                  style={{ color: '#1890ff' }}
                 >
                   Manutenção
                 </Button>,
-                <Button
-                  type="link"
-                  key={vehicle.key}
-                  onClick={() => navigate(`/vehicle/trip`)}
-                  style={{ color: '#1890ff' }}
-                >
+                <Button type="link" onClick={() => navigate(`/vehicle/trip`)}>
                   Viagens
                 </Button>,
+                <Button
+                  type="link"
+                  onClick={() => {
+                    setCurrentVehicle(vehicle);
+                    setIsModalVisible(true);
+                  }}
+                >
+                  Editar
+                </Button>,
               ]}
-              style={{
-                borderRadius: '10px',
-                backgroundColor: '#fff',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-              }}
             >
               <Card.Meta
-                title={<strong>{vehicle.nome}</strong>}
+                title={<strong>{vehicle.name}</strong>}
                 description={
-                  <div style={{ fontSize: '14px' }}>
+                  <div>
                     <p>
-                      <strong>Placa:</strong> {vehicle.placa}
+                      <strong>Placa:</strong> {vehicle.plate}
                     </p>
                     <p>
-                      <strong>Marca:</strong> {vehicle.marca}
+                      <strong>Marca:</strong> {vehicle.brand}
                     </p>
                     <p>
-                      <strong>Ano:</strong> {vehicle.ano}
+                      <strong>Ano:</strong> {vehicle.year}
                     </p>
                     <p>
-                      <strong>Venc. Doc.:</strong> {vehicle.vencimentoDoc}
+                      <strong>Venc. Doc.:</strong>{" "}
+                      {vehicle.docExpiry
+                        ? new Date(vehicle.docExpiry).toLocaleDateString()
+                        : "-"}
                     </p>
                     <p>
                       <strong>Renavam:</strong> {vehicle.renavam}
@@ -151,10 +134,13 @@ export default function VehicleList() {
 
       <AddVehicleModal
         visible={isModalVisible}
-        onCancel={() => setIsModalVisible(false)}
-        onSubmit={handleAddVehicle}
+        onCancel={() => {
+          setIsModalVisible(false);
+          setCurrentVehicle(null);
+        }}
         vehicle={currentVehicle}
+        onSubmit={handleSaveVehicle}
       />
     </Card>
-  )
+  );
 }

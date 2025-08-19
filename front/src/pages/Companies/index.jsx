@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   Table,
   Tag,
@@ -19,7 +19,7 @@ export default function CompanyList() {
   const [searchText, setSearchText] = useState('')
   const [filteredData, setFilteredData] = useState([])
   const [isModalVisible, setIsModalVisible] = useState(false)
-  const [editingCompany, setEditingCompany] = useState(null) // Para controlar a empresa que está sendo editada
+  const [editingCompany, setEditingCompany] = useState(null) 
   const [data, setData] = useState([])
 
   useEffect(() => {
