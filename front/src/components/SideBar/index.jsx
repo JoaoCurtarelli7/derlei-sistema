@@ -1,125 +1,107 @@
 import React from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { Menu } from 'antd'
-import { Link } from 'react-router-dom'
 import {
-  FaHome,
-  FaShoppingCart,
-  FaTruckMoving,
-  FaUsers,
-  FaStoreAlt,
-  FaMoneyBillWave,
-  FaPrint,
-} from 'react-icons/fa'
-import Dropdown from 'react-bootstrap/Dropdown'
-import user from '../assets/user.png'
-import moment from 'moment'
-import './styles.css'
+    HomeOutlined,
+    ShoppingCartOutlined,
+    TruckOutlined,
+    UserOutlined,
+    ShopOutlined,
+    PrinterOutlined,
+    CalendarOutlined,
+    CalculatorOutlined
+} from '@ant-design/icons'
 import { useUserContext } from '../../context/userContext'
+import './styles.css'
 
 export default function AppSidebar() {
-  const { user: userContext } = useUserContext()
+  const { user: userContext, logout } = useUserContext()
+  const location = useLocation()
 
-  const currentHour = moment().hour()
-
-  let greeting = 'Bom dia'
-  if (currentHour >= 12 && currentHour < 18) {
-    greeting = 'Boa tarde'
-  } else if (currentHour >= 18 || currentHour < 6) {
-    greeting = 'Boa noite'
+  const handleLogout = () => {
+    logout()
   }
 
+  const menuItems = [
+    {
+      key: '/',
+      icon: <HomeOutlined />,
+      label: <Link to="/">Dashboard</Link>
+    },
+    {
+      key: 'gestao',
+      icon: <UserOutlined />,
+      label: 'Gestão',
+      children: [
+        {
+          key: '/months',
+          icon: <CalendarOutlined />,
+          label: <Link to="/months">Meses</Link>
+        },
+        {
+          key: '/closings',
+          icon: <CalculatorOutlined />,
+          label: <Link to="/closings">Fechamentos</Link>
+        },
+        {
+          key: '/employee',
+          icon: <UserOutlined />,
+          label: <Link to="/employee">Funcionários</Link>
+        },
+        {
+          key: '/companies',
+          icon: <ShopOutlined />,
+          label: <Link to="/companies">Empresas</Link>
+        }
+      ]
+    },
+    {
+      key: 'operacoes',
+      icon: <TruckOutlined />,
+      label: 'Operações',
+      children: [
+        {
+          key: '/load',
+          icon: <ShoppingCartOutlined />,
+          label: <Link to="/load">Cargas</Link>
+        },
+        {
+          key: '/vehicle-maintenance',
+          icon: <TruckOutlined />,
+          label: <Link to="/vehicle-maintenance">Manutenção</Link>
+        }
+      ]
+    },
+    {
+      key: '/reports',
+      icon: <PrinterOutlined />,
+      label: <Link to="/reports">Relatórios</Link>
+    }
+  ]
+
   return (
-    <div className="d-flex">
-      <nav className="sidebar">
-        <Link
-          to="/"
-          className="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none"
-        >
-          <span className="fs-4">
-            {greeting}, {userContext?.name}
-          </span>
-        </Link>
-        <hr />
+    <div className="sidebar">
+      <div className="sidebar-header">
+        <h2>🚛 Derlei Sistema</h2>
+        <p>Olá, {userContext?.name || 'Usuário'}</p>
+      </div>
 
         <Menu
-          mode="vertical"
-          className="bg-dark text-white"
-          theme="dark"
-          style={{ border: 'none' }}
-        >
-          <Menu.Item key="/" icon={<FaHome className="me-2" />}>
-            <Link to="/" className="text-decoration-none">
-              Home
+        mode="inline"
+        selectedKeys={[location.pathname]}
+        defaultOpenKeys={['gestao', 'operacoes']}
+        items={menuItems}
+        className="sidebar-menu"
+      />
+      
+      <div className="sidebar-footer">
+        <Link to="/user-profile" className="footer-link">
+          <UserOutlined /> Perfil
             </Link>
-          </Menu.Item>
-
-          <Menu.Item
-            key="/closing-month"
-            icon={<FaMoneyBillWave className="me-2" />}
-          >
-            <Link to="/closing-month" className="text-decoration-none">
-              Fechamento
-            </Link>
-          </Menu.Item>
-
-          <Menu.Item key="/load" icon={<FaShoppingCart className="me-2" />}>
-            <Link to="/load" className="text-decoration-none">
-              Carga/Pedidos
-            </Link>
-          </Menu.Item>
-
-          <Menu.Item key="/employee" icon={<FaUsers className="me-2" />}>
-            <Link to="/employee" className="text-decoration-none">
-              Funcionário
-            </Link>
-          </Menu.Item>
-
-          <Menu.Item
-            key="/vehicle-maintenance"
-            icon={<FaTruckMoving className="me-2" />}
-          >
-            <Link to="/vehicle-maintenance" className="text-decoration-none">
-              Manutenção Veículos
-            </Link>
-          </Menu.Item>
-
-          <Menu.Item key="/companies" icon={<FaStoreAlt className="me-2" />}>
-            <Link to="/companies" className="text-decoration-none">
-              Empresas
-            </Link>
-          </Menu.Item>
-
-          <Menu.Item key="/report" icon={<FaPrint className="me-2" />}>
-            <Link to="/report" className="text-decoration-none">
-              Relatorios
-            </Link>
-          </Menu.Item>
-        </Menu>
-
-        <hr />
-
-        <Dropdown className="sidebar-dropdown">
-          <Dropdown.Toggle
-            id="dropdown-user"
-            className="d-flex align-items-center text-white bg-transparent border-0"
-          >
-            <img
-              src={user}
-              alt=""
-              width="32"
-              height="32"
-              className="rounded-circle me-2"
-            />
-            <strong style={{ margin: ' 010px' }}>Perfil</strong>
-          </Dropdown.Toggle>
-
-          <Dropdown.Menu variant="dark" className="dropdown-menu-custom">
-            <Dropdown.Item href="/user-profile">Conta</Dropdown.Item>
-            <Dropdown.Divider />
-            <Dropdown.Item href="/login">Sair</Dropdown.Item>
-          </Dropdown.Menu>
-        </Dropdown>
-      </nav>
+        <button onClick={handleLogout} className="logout-btn">
+          Sair
+        </button>
+      </div>
     </div>
   )
 }

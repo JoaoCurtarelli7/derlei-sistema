@@ -18,26 +18,31 @@ export async function companyRoutes(app: FastifyInstance) {
     commission: z.coerce.number(),
   });
 
-  // 🔒 Protege todas as rotas da empresa
-  app.addHook("preHandler", authenticate);
+  // Listar todas as empresas (rota pública para permitir seleção)
+  app.get("/companies", async () => {
+    try {
+      const companies = await prisma.company.findMany({
+        select: {
+          id: true,
+          name: true,
+          type: true,
+          cnpj: true,
+          dateRegistration: true,
+          status: true,
+          responsible: true,
+          commission: true,
+        },
+      });
 
-  // Listar todas as empresas
-  app.get("/company", async () => {
-    const companies = await prisma.company.findMany({
-      select: {
-        id: true,
-        name: true,
-        type: true,
-        cnpj: true,
-        dateRegistration: true,
-        status: true,
-        responsible: true,
-        commission: true,
-      },
-    });
-
-    return companies;
+      return companies;
+    } catch (error) {
+      console.error("Erro ao buscar empresas:", error);
+      throw error;
+    }
   });
+
+  // 🔒 Protege as rotas restantes da empresa
+  app.addHook("preHandler", authenticate);
 
   // Obter uma empresa pelo ID
   app.get("/company/:id", async (req, rep) => {
@@ -52,27 +57,29 @@ export async function companyRoutes(app: FastifyInstance) {
 
   // Criar uma nova empresa
   app.post("/company", async (req, rep) => {
-    const { name, type, cnpj, dateRegistration, status, responsible, commission } = bodySchema.parse(req.body);
+    const { name, type, cnpj, dateRegistration, status, responsible, commission } =
+      bodySchema.parse(req.body);
 
-    const company = await prisma.company.create({
-      data: {
-        name,
-        type,
-        cnpj,
-        dateRegistration,
-        status,
-        responsible,
-        commission,
-      },
-    });
+    try {
+      const company = await prisma.company.create({
+        data: { name, type, cnpj, dateRegistration, status, responsible, commission },
+      });
 
-    return rep.code(201).send(company);
+      return rep.code(201).send(company);
+    } catch (error: any) {
+      if (error.code === "P2002" && error.meta?.target?.includes("cnpj")) {
+        return rep.code(400).send({ message: "Já existe uma empresa cadastrada com este CNPJ" });
+      }
+      console.error("Erro ao criar empresa:", error);
+      return rep.code(500).send({ message: "Erro interno do servidor" });
+    }
   });
 
   // Atualizar uma empresa existente
   app.put("/company/:id", async (req, rep) => {
     const { id } = paramsSchema.parse(req.params);
-    const { name, type, cnpj, dateRegistration, status, responsible, commission } = bodySchema.parse(req.body);
+    const { name, type, cnpj, dateRegistration, status, responsible, commission } =
+      bodySchema.parse(req.body);
 
     try {
       await prisma.company.findUniqueOrThrow({ where: { id } });
@@ -83,8 +90,11 @@ export async function companyRoutes(app: FastifyInstance) {
       });
 
       return rep.send(updatedCompany);
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      if (error.code === "P2002" && error.meta?.target?.includes("cnpj")) {
+        return rep.code(400).send({ message: "Já existe uma empresa cadastrada com este CNPJ" });
+      }
+      console.error("Erro ao atualizar empresa:", error);
       return rep.code(500).send({ message: "Erro interno do servidor" });
     }
   });
@@ -93,8 +103,12 @@ export async function companyRoutes(app: FastifyInstance) {
   app.delete("/company/:id", async (req, rep) => {
     const { id } = paramsSchema.parse(req.params);
 
-    const company = await prisma.company.delete({ where: { id } });
-
-    return company;
+    try {
+      const company = await prisma.company.delete({ where: { id } });
+      return company;
+    } catch (error) {
+      console.error("Erro ao deletar empresa:", error);
+      return rep.code(500).send({ message: "Erro interno do servidor" });
+    }
   });
 }

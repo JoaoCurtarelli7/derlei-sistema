@@ -1,126 +1,635 @@
-import React, { useState } from 'react'
-import { Table, Row, Col, Card, Typography, Button } from 'antd'
+import React, { useState, useEffect } from 'react'
+import {
+  Table,
+  Row,
+  Col,
+  Card,
+  Typography,
+  Button,
+  Select,
+  DatePicker,
+  Statistic,
+  Space,
+  Tag,
+  Alert,
+  Tooltip,
+  Progress,
+  message,
+  Popconfirm
+} from 'antd'
+import {
+  PlusOutlined,
+  DownloadOutlined,
+  EyeOutlined,
+  DollarOutlined,
+  RiseOutlined,
+  ArrowDownOutlined,
+  CalculatorOutlined,
+  DeleteOutlined,
+  EditOutlined
+} from '@ant-design/icons'
 import * as XLSX from 'xlsx'
+import dayjs from 'dayjs'
 import CustomModal from '../../components/Modal/Closing'
+import api from '../../lib/api'
 import './styles.css'
 
-const { Title } = Typography
+const { Title, Text } = Typography
+const { Option } = Select
+const { RangePicker } = DatePicker
 
 export default function Closing() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [currentType, setCurrentType] = useState('')
-  const [entradas, setEntradas] = useState([
-    { key: '1', descricao: 'Dequech 1ª Quinzena', valor: 'R$ 0,00' },
-    { key: '2', descricao: 'Atac. Joinville 1ª Quinzena', valor: 'R$ 0,00' },
-  ])
-  const [saidas, setSaidas] = useState([
-    { key: '1', descricao: 'Salário Gustavo', valor: 'R$ 13.000,00' },
-    { key: '2', descricao: 'Parcela Seguro Caminhão', valor: 'R$ 775,38' },
-  ])
-  const [impostos, setImpostos] = useState([
-    { key: '1', nome: 'FGTS', valor: 'R$ 849,19' },
-    { key: '2', nome: 'INSS + Férias', valor: 'R$ 1.330,28' },
-  ])
-  const [totais, setTotais] = useState({
-    totalEntradas: 'R$ 15.000,00',
-    totalSaidas: 'R$ 37.772,00',
-  })
+  const [editingEntry, setEditingEntry] = useState(null)
+  const [periodType, setPeriodType] = useState('month')
+  const [selectedPeriod, setSelectedPeriod] = useState(null)
+  const [selectedCompany, setSelectedCompany] = useState(null)
+  const [companies, setCompanies] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [entries, setEntries] = useState([])
 
-  const handleAdd = (values) => {
-    const newData = { key: Date.now().toString(), ...values }
-    const updateState = {
-      entrada: () => setEntradas((prev) => [...prev, newData]),
-      saida: () => setSaidas((prev) => [...prev, newData]),
-      imposto: () => setImpostos((prev) => [...prev, newData]),
+  // Carregar empresas ao montar o componente
+  useEffect(() => {
+    fetchCompanies()
+  }, [])
+
+  // Carregar dados financeiros quando período ou empresa mudar
+  useEffect(() => {
+    if (selectedPeriod) {
+      fetchFinancialData()
     }
-    updateState[currentType]?.()
+  }, [selectedPeriod, selectedCompany])
+
+  const fetchCompanies = async () => {
+    try {
+      const response = await api.get('/companies')
+      setCompanies(response.data)
+    } catch (error) {
+      console.error('Erro ao carregar empresas:', error)
+      message.error('Erro ao carregar empresas')
+    }
+  }
+
+  const fetchFinancialData = async () => {
+    if (!selectedPeriod) return
+
+    setLoading(true)
+    try {
+      let startDate, endDate
+
+      switch (periodType) {
+        case 'week':
+          startDate = selectedPeriod[0].format('YYYY-MM-DD')
+          endDate = selectedPeriod[1].format('YYYY-MM-DD')
+          break
+        case 'biweekly':
+          startDate = selectedPeriod[0].format('YYYY-MM-DD')
+          endDate = selectedPeriod[1].format('YYYY-MM-DD')
+          break
+        case 'month':
+          startDate = selectedPeriod.startOf('month').format('YYYY-MM-DD')
+          endDate = selectedPeriod.endOf('month').format('YYYY-MM-DD')
+          break
+        case 'period':
+          startDate = selectedPeriod[0].format('YYYY-MM-DD')
+          endDate = selectedPeriod[1].format('YYYY-MM-DD')
+          break
+        default:
+          return
+      }
+
+      const params = {
+        startDate,
+        endDate,
+        ...(selectedCompany && { companyId: selectedCompany })
+      }
+
+      const response = await api.get('/financial/entries', { params })
+      setEntries(response.data.entries || [])
+    } catch (error) {
+      console.error('Erro ao carregar dados financeiros:', error)
+      message.error('Erro ao carregar dados financeiros')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleAdd = async (values) => {
+    try {
+      const entryData = {
+        ...values,
+        companyId: selectedCompany || undefined
+      }
+
+      if (editingEntry) {
+        await api.put(`/financial/entries/${editingEntry.id}`, entryData)
+        message.success('Entrada financeira atualizada com sucesso!')
+      } else {
+        await api.post('/financial/entries', entryData)
+        message.success('Entrada financeira criada com sucesso!')
+      }
+
+      fetchFinancialData()
+      setIsModalOpen(false)
+      setEditingEntry(null)
+    } catch (error) {
+      console.error('Erro ao salvar entrada financeira:', error)
+      message.error(error.response?.data?.message || 'Erro ao salvar entrada financeira')
+    }
+  }
+
+  const handleDelete = async (id) => {
+    try {
+      await api.delete(`/financial/entries/${id}`)
+      message.success('Entrada financeira deletada com sucesso!')
+      fetchFinancialData()
+    } catch (error) {
+      console.error('Erro ao deletar entrada financeira:', error)
+      message.error('Erro ao deletar entrada financeira')
+    }
+  }
+
+  const handleEdit = (entry) => {
+    setEditingEntry(entry)
+    setCurrentType(entry.type)
+    setIsModalOpen(true)
   }
 
   const openModal = (type) => {
     setCurrentType(type)
+    setEditingEntry(null)
     setIsModalOpen(true)
   }
 
+  const handlePeriodChange = (value) => {
+    setPeriodType(value)
+    setSelectedPeriod(null)
+  }
+
+  const handleDateChange = (dates) => {
+    setSelectedPeriod(dates)
+  }
+
+  const getPeriodLabel = () => {
+    if (!selectedPeriod) return 'Período não selecionado'
+    
+    switch (periodType) {
+      case 'week':
+        return `Semana: ${selectedPeriod[0].format('DD/MM')} a ${selectedPeriod[1].format('DD/MM/YYYY')}`
+      case 'biweekly':
+        return `Quinzena: ${selectedPeriod[0].format('DD/MM')} a ${selectedPeriod[1].format('DD/MM/YYYY')}`
+      case 'month':
+        return `Mês: ${selectedPeriod.format('MMMM/YYYY')}`
+      case 'period':
+        return `Período: ${selectedPeriod[0].format('DD/MM/YYYY')} a ${selectedPeriod[1].format('DD/MM/YYYY')}`
+      default:
+        return 'Período selecionado'
+    }
+  }
+
+  // Filtrar entradas por tipo
+  const entradas = entries.filter(entry => entry.type === 'entrada')
+  const saidas = entries.filter(entry => entry.type === 'saida')
+  const impostos = entries.filter(entry => entry.type === 'imposto')
+
+  // Calcular totais
+  const totalEntradas = entradas.reduce((sum, item) => sum + item.amount, 0)
+  const totalSaidas = saidas.reduce((sum, item) => sum + item.amount, 0)
+  const totalImpostos = impostos.reduce((sum, item) => sum + item.amount, 0)
+  const saldo = totalEntradas - totalSaidas - totalImpostos
+  const margemLucro = totalEntradas > 0 ? ((saldo / totalEntradas) * 100) : 0
+
   const exportToExcel = () => {
+    if (entries.length === 0) {
+      message.warning('Não há dados para exportar')
+      return
+    }
+
     const workbook = XLSX.utils.book_new()
+    const periodLabel = getPeriodLabel()
+    const companyName = companies.find(c => c.id === selectedCompany)?.name || 'Todas as Empresas'
 
     const worksheetData = [
+      [`RELATÓRIO DE FECHAMENTO FINANCEIRO - ${periodLabel}`],
+      [`Empresa: ${companyName}`],
+      [''],
+      ['RESUMO EXECUTIVO'],
+      ['Total Entradas', `R$ ${totalEntradas.toFixed(2).replace('.', ',')}`],
+      ['Total Saídas', `R$ ${totalSaidas.toFixed(2).replace('.', ',')}`],
+      ['Total Impostos', `R$ ${totalImpostos.toFixed(2).replace('.', ',')}`],
+      ['Saldo', `R$ ${saldo.toFixed(2).replace('.', ',')}`],
+      ['Margem de Lucro', `${margemLucro.toFixed(2)}%`],
+      [''],
       ['ENTRADAS'],
-      ['SERVIÇO / ENTRADAS', 'VALOR'],
-      ...entradas.map(({ descricao, valor }) => [descricao, valor]),
-      [],
+      ['Descrição', 'Categoria', 'Data', 'Valor', 'Empresa'],
+      ...entradas.map(({ description, category, date, amount, company }) => [
+        description, 
+        category, 
+        dayjs(date).format('DD/MM/YYYY'), 
+        `R$ ${amount.toFixed(2).replace('.', ',')}`,
+        company?.name || 'N/A'
+      ]),
+      [''],
       ['SAÍDAS'],
-      ['DESPESA', 'VALOR'],
-      ...saidas.map(({ descricao, valor }) => [descricao, valor]),
-      [],
+      ['Descrição', 'Categoria', 'Data', 'Valor', 'Empresa'],
+      ...saidas.map(({ description, category, date, amount, company }) => [
+        description, 
+        category, 
+        dayjs(date).format('DD/MM/YYYY'), 
+        `R$ ${amount.toFixed(2).replace('.', ',')}`,
+        company?.name || 'N/A'
+      ]),
+      [''],
       ['IMPOSTOS'],
-      ['IMPOSTO', 'VALOR'],
-      ...impostos.map(({ nome, valor }) => [nome, valor]),
-      [],
-      ['TOTAIS'],
-      ['Total Entradas', totais.totalEntradas],
-      ['Total Saídas', totais.totalSaidas],
+      ['Nome', 'Categoria', 'Data', 'Valor', 'Empresa'],
+      ...impostos.map(({ description, category, date, amount, company }) => [
+        description, 
+        category, 
+        dayjs(date).format('DD/MM/YYYY'), 
+        `R$ ${amount.toFixed(2).replace('.', ',')}`,
+        company?.name || 'N/A'
+      ]),
     ]
 
     const worksheet = XLSX.utils.aoa_to_sheet(worksheetData)
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Fechamento Mensal')
-    XLSX.writeFile(workbook, 'FechamentoMensal.xlsx')
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Fechamento Financeiro')
+    XLSX.writeFile(workbook, `Fechamento_${periodLabel.replace(/[^a-zA-Z0-9]/g, '_')}.xlsx`)
   }
 
   const createColumns = (type) => [
     {
       title: type === 'imposto' ? 'Imposto' : 'Descrição',
-      dataIndex: type === 'imposto' ? 'nome' : 'descricao',
-      key: 'descricao',
+      dataIndex: 'description',
+      key: 'description',
+      width: '35%',
+      render: (text, record) => (
+        <div>
+          <div style={{ fontWeight: 500 }}>{text}</div>
+          <Text type="secondary" style={{ fontSize: '12px' }}>
+            {record.category}
+          </Text>
+        </div>
+      )
     },
-    { title: 'Valor', dataIndex: 'valor', key: 'valor', align: 'right' },
+    {
+      title: 'Data',
+      dataIndex: 'date',
+      key: 'date',
+      width: '20%',
+      render: (date) => dayjs(date).format('DD/MM/YYYY')
+    },
+    {
+      title: 'Valor',
+      dataIndex: 'amount',
+      key: 'amount',
+      width: '25%',
+      align: 'right',
+      render: (valor) => (
+        <Text strong style={{ 
+          color: type === 'entrada' ? '#52c41a' : '#ff4d4f',
+          fontSize: '16px'
+        }}>
+          R$ {valor.toFixed(2).replace('.', ',')}
+        </Text>
+      )
+    },
+    {
+      title: 'Ações',
+      key: 'actions',
+      width: '20%',
+      render: (_, record) => (
+        <Space>
+          <Tooltip title="Editar">
+            <Button 
+              type="text" 
+              icon={<EditOutlined />} 
+              size="small"
+              onClick={() => handleEdit(record)}
+            />
+          </Tooltip>
+          <Popconfirm
+            title="Tem certeza que deseja deletar esta entrada?"
+            onConfirm={() => handleDelete(record.id)}
+            okText="Sim"
+            cancelText="Não"
+          >
+            <Tooltip title="Deletar">
+              <Button 
+                type="text" 
+                danger
+                icon={<DeleteOutlined />} 
+                size="small"
+              />
+            </Tooltip>
+          </Popconfirm>
+        </Space>
+      )
+    }
   ]
 
   return (
-    <Card className="closing-card">
-      <Title level={2}>Fechamento Mensal</Title>
-      <Row gutter={[16, 16]}>
-        {[
-          { title: 'Entradas', data: entradas, type: 'entrada' },
-          { title: 'Saídas', data: saidas, type: 'saida' },
-          { title: 'Impostos', data: impostos, type: 'imposto' },
-        ].map(({ title, data, type }) => (
-          <Col span={12} key={type}>
-            <Card
-              title={title}
-              className={`custom-card ${type}`}
-              extra={<Button onClick={() => openModal(type)}>Adicionar</Button>}
-            >
-              <Table
-                dataSource={data}
-                columns={createColumns(type)}
-                pagination={false}
-                size="small"
-              />
-            </Card>
+    <div className="closing-container">
+      {/* Header com seleção de período */}
+      <Card className="period-selector-card">
+        <Row gutter={[16, 16]} align="middle">
+          <Col span={6}>
+            <Title level={3} style={{ margin: 0 }}>
+              <CalculatorOutlined style={{ marginRight: 8 }} />
+              Fechamento Financeiro
+            </Title>
           </Col>
-        ))}
-        <Col span={12}>
-          <Card title="Totais" className="custom-card totais">
-            <div className="totais-container">
-              <Title level={4}>Total Entradas: {totais.totalEntradas}</Title>
-              <Title level={4}>Total Saídas: {totais.totalSaidas}</Title>
-            </div>
+          <Col span={4}>
+            <Select
+              value={periodType}
+              onChange={handlePeriodChange}
+              style={{ width: '100%' }}
+              placeholder="Tipo de período"
+            >
+              <Option value="week">Semana</Option>
+              <Option value="biweekly">Quinzena</Option>
+              <Option value="month">Mês</Option>
+              <Option value="period">Período Personalizado</Option>
+            </Select>
+          </Col>
+          <Col span={6}>
+            {periodType === 'period' ? (
+              <RangePicker
+                style={{ width: '100%' }}
+                onChange={handleDateChange}
+                placeholder={['Data Início', 'Data Fim']}
+              />
+            ) : periodType === 'month' ? (
+              <DatePicker
+                picker="month"
+                style={{ width: '100%' }}
+                onChange={handleDateChange}
+                placeholder="Selecione o mês"
+              />
+            ) : (
+              <DatePicker
+                picker={periodType === 'week' ? 'week' : 'date'}
+                onChange={handleDateChange}
+                placeholder={`Selecione a ${periodType === 'week' ? 'semana' : 'data'}`}
+              />
+            )}
+          </Col>
+          <Col span={4}>
+            <Select
+              value={selectedCompany}
+              onChange={setSelectedCompany}
+              style={{ width: '100%' }}
+              placeholder="Empresa"
+              allowClear
+            >
+              {companies.map(company => (
+                <Option key={company.id} value={company.id}>
+                  {company.name}
+                </Option>
+              ))}
+            </Select>
+          </Col>
+          <Col span={4}>
+            <Button 
+              type="primary" 
+              icon={<PlusOutlined />}
+              onClick={() => openModal('entrada')}
+              style={{ width: '100%' }}
+            >
+              Nova Entrada
+            </Button>
+          </Col>
+        </Row>
+        
+        {selectedPeriod && (
+          <Alert
+            message={getPeriodLabel()}
+            type="info"
+            showIcon
+            style={{ marginTop: 16 }}
+          />
+        )}
+      </Card>
+
+      {/* Cards de resumo */}
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+        <Col span={6}>
+          <Card className="summary-card entrada">
+            <Statistic
+              title="Total Entradas"
+              value={totalEntradas}
+              precision={2}
+              valueStyle={{ color: '#52c41a' }}
+              prefix={<RiseOutlined />}
+              suffix="R$"
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card className="summary-card saida">
+            <Statistic
+              title="Total Saídas"
+              value={totalSaidas}
+              precision={2}
+              valueStyle={{ color: '#ff4d4f' }}
+              prefix={<ArrowDownOutlined />}
+              suffix="R$"
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card className="summary-card imposto">
+            <Statistic
+              title="Total Impostos"
+              value={totalImpostos}
+              precision={2}
+              valueStyle={{ color: '#faad14' }}
+              prefix={<DollarOutlined />}
+              suffix="R$"
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card className="summary-card saldo">
+            <Statistic
+              title="Saldo"
+              value={saldo}
+              precision={2}
+              valueStyle={{ color: saldo >= 0 ? '#52c41a' : '#ff4d4f' }}
+              prefix={<DollarOutlined />}
+              suffix="R$"
+            />
+            <Progress 
+              percent={Math.min(Math.abs(margemLucro), 100)} 
+              size="small" 
+              status={margemLucro >= 0 ? 'success' : 'exception'}
+              style={{ marginTop: 8 }}
+            />
           </Card>
         </Col>
       </Row>
-      <div className="action-buttons">
-        <Button type="primary" onClick={exportToExcel}>
-          Exportar para Excel
+
+      {/* Tabelas principais */}
+      <Row gutter={[16, 16]}>
+        <Col span={8}>
+          <Card
+            title={
+              <span>
+                <RiseOutlined style={{ color: '#52c41a', marginRight: 8 }} />
+                Entradas
+                <Tag color="green" style={{ marginLeft: 8 }}>
+                  {entradas.length} itens
+                </Tag>
+              </span>
+            }
+            className="data-card entrada"
+            extra={
+              <Button 
+                type="primary" 
+                size="small" 
+                icon={<PlusOutlined />}
+                onClick={() => openModal('entrada')}
+              >
+                Adicionar
+              </Button>
+            }
+          >
+            <Table
+              dataSource={entradas}
+              columns={createColumns('entrada')}
+              pagination={false}
+              size="small"
+              scroll={{ y: 300 }}
+              loading={loading}
+            />
+          </Card>
+        </Col>
+
+        <Col span={8}>
+            <Card
+            title={
+              <span>
+                <ArrowDownOutlined style={{ color: '#ff4d4f', marginRight: 8 }} />
+                Saídas
+                <Tag color="red" style={{ marginLeft: 8 }}>
+                  {saidas.length} itens
+                </Tag>
+              </span>
+            }
+            className="data-card saida"
+            extra={
+              <Button 
+                type="primary" 
+                size="small" 
+                icon={<PlusOutlined />}
+                onClick={() => openModal('saida')}
+              >
+                Adicionar
+              </Button>
+            }
+            >
+              <Table
+              dataSource={saidas}
+              columns={createColumns('saida')}
+                pagination={false}
+                size="small"
+              scroll={{ y: 300 }}
+              loading={loading}
+              />
+            </Card>
+          </Col>
+
+        <Col span={8}>
+          <Card
+            title={
+              <span>
+                <DollarOutlined style={{ color: '#faad14', marginRight: 8 }} />
+                Impostos
+                <Tag color="orange" style={{ marginLeft: 8 }}>
+                  {impostos.length} itens
+                </Tag>
+              </span>
+            }
+            className="data-card imposto"
+            extra={
+              <Button 
+                type="primary" 
+                size="small" 
+                icon={<PlusOutlined />}
+                onClick={() => openModal('imposto')}
+              >
+                Adicionar
+              </Button>
+            }
+          >
+            <Table
+              dataSource={impostos}
+              columns={createColumns('imposto')}
+              pagination={false}
+              size="small"
+              scroll={{ y: 300 }}
+              loading={loading}
+            />
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Resumo final */}
+      <Card className="final-summary-card">
+        <Row gutter={[16, 16]} align="middle">
+          <Col span={8}>
+            <div className="summary-item">
+              <Text strong>Margem de Lucro:</Text>
+              <Tag 
+                color={margemLucro >= 0 ? 'green' : 'red'} 
+                style={{ fontSize: '16px', padding: '4px 12px' }}
+              >
+                {margemLucro >= 0 ? '+' : ''}{margemLucro.toFixed(2)}%
+              </Tag>
+            </div>
+          </Col>
+          <Col span={8} style={{ textAlign: 'center' }}>
+            <div className="summary-item">
+              <Text strong>Período:</Text>
+              <Text type="secondary" style={{ marginLeft: 8 }}>
+                {getPeriodLabel()}
+              </Text>
+            </div>
+          </Col>
+          <Col span={8} style={{ textAlign: 'right' }}>
+            <Space>
+              <Button 
+                type="default" 
+                icon={<EyeOutlined />}
+                onClick={() => console.log('Visualizar relatório')}
+              >
+                Visualizar
+              </Button>
+              <Button 
+                type="primary" 
+                icon={<DownloadOutlined />}
+                onClick={exportToExcel}
+                disabled={entries.length === 0}
+              >
+                Exportar Excel
         </Button>
-      </div>
+            </Space>
+          </Col>
+        </Row>
+      </Card>
+
+      {/* Modal */}
       <CustomModal
         isVisible={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false)
+          setEditingEntry(null)
+        }}
         onSubmit={handleAdd}
-        title={`Adicionar ${currentType.charAt(0).toUpperCase() + currentType.slice(1)}`}
+        title={`${editingEntry ? 'Editar' : 'Adicionar'} ${currentType === 'entrada' ? 'Entrada' : currentType === 'saida' ? 'Saída' : 'Imposto'}`}
         type={currentType}
+        editingEntry={editingEntry}
       />
-    </Card>
+    </div>
   )
 }

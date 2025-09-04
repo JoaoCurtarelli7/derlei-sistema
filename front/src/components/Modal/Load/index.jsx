@@ -1,13 +1,51 @@
-import React from 'react'
-import { Modal, Form, Input } from 'antd'
+import React, { useEffect } from 'react'
+import { Modal, Form, Input, DatePicker, Select, InputNumber } from 'antd'
+import dayjs from 'dayjs'
+
+const { Option } = Select
 
 const formatCurrency = (value) => {
-  const cleanValue = value.replace(/[^\d]/g, '').padStart(3, '0')
+  if (!value) return ''
+  const cleanValue = value.toString().replace(/[^\d]/g, '').padStart(3, '0')
   return `R$ ${cleanValue.slice(0, -2) || '0'},${cleanValue.slice(-2)}`
 }
 
-export default function CustomModalLoad({ isVisible, onClose, onSubmit }) {
+const parseCurrency = (value) => {
+  if (!value) return 0
+  return parseFloat(value.toString().replace(/[^\d,]/g, '').replace(',', '.')) || 0
+}
+
+export default function CustomModalLoad({ 
+  isVisible, 
+  onClose, 
+  onSubmit, 
+  editingLoad, 
+  companies, 
+  selectedCompany 
+}) {
   const [form] = Form.useForm()
+
+  useEffect(() => {
+    if (editingLoad && isVisible) {
+      form.setFieldsValue({
+        data: dayjs(editingLoad.data, 'DD/MM/YYYY'),
+        numeroCarregamento: editingLoad.numeroCarregamento,
+        entregas: editingLoad.entregas,
+        pesoCarga: editingLoad.pesoCarga,
+        valorTotal: editingLoad.valorTotal,
+        frete4: editingLoad.frete4,
+        somaTotalFrete: editingLoad.somaTotalFrete,
+        fechamentos: editingLoad.fechamentos,
+        observacoes: editingLoad.observacoes,
+        companyId: editingLoad.companyId
+      })
+    } else if (isVisible) {
+      form.resetFields()
+      if (selectedCompany) {
+        form.setFieldsValue({ companyId: selectedCompany })
+      }
+    }
+  }, [editingLoad, isVisible, form, selectedCompany])
 
   const handleOk = () => {
     form
@@ -15,23 +53,17 @@ export default function CustomModalLoad({ isVisible, onClose, onSubmit }) {
       .then((values) => {
         const formattedValues = {
           ...values,
-          pesoCarga: parseFloat(values.pesoCarga),
-          valorTotal: parseFloat(
-            values.valorTotal.replace(/[^\d,]/g, '').replace(',', '.'),
-          ),
-          frete4: parseFloat(
-            values.frete4.replace(/[^\d,]/g, '').replace(',', '.'),
-          ),
-          somaTotalFrete: parseFloat(
-            values.somaTotalFrete.replace(/[^\d,]/g, '').replace(',', '.'),
-          ),
-          fechamentos: parseFloat(
-            values.fechamentos.replace(/[^\d,]/g, '').replace(',', '.'),
-          ),
+          data: values.data.format('DD/MM/YYYY'),
+          pesoCarga: parseFloat(values.pesoCarga) || 0,
+          valorTotal: parseFloat(values.valorTotal) || 0,
+          frete4: parseFloat(values.frete4) || 0,
+          somaTotalFrete: parseFloat(values.somaTotalFrete) || 0,
+          fechamentos: parseFloat(values.fechamentos) || 0,
+          entregas: parseInt(values.entregas) || 0,
+          companyId: values.companyId || selectedCompany
         }
         onSubmit(formattedValues)
         form.resetFields()
-        onClose()
       })
       .catch((info) => console.error('Validation failed:', info))
   }
@@ -41,23 +73,67 @@ export default function CustomModalLoad({ isVisible, onClose, onSubmit }) {
     onClose()
   }
 
+  const calculateFrete4 = (valorTotal) => {
+    if (!valorTotal) return 0
+    return (parseFloat(valorTotal) * 0.04).toFixed(2)
+  }
+
+  const handleValorTotalChange = (value) => {
+    const frete4 = calculateFrete4(value)
+    form.setFieldsValue({ 
+      frete4: frete4,
+      somaTotalFrete: frete4 
+    })
+  }
+
+  const isEditing = !!editingLoad
+
   return (
     <Modal
       visible={isVisible}
-      title="Adicionar Novo Carregamento"
+      title={isEditing ? "Editar Carga" : "Adicionar Nova Carga"}
       onOk={handleOk}
       onCancel={handleCancel}
-      okText="Salvar"
+      okText={isEditing ? "Atualizar" : "Salvar"}
       cancelText="Cancelar"
+      width={600}
     >
       <Form form={form} layout="vertical">
+        <Form.Item
+          name="companyId"
+          label="Empresa"
+          rules={[{ required: true, message: 'Por favor, selecione a empresa' }]}
+        >
+          <Select
+            placeholder="Selecione a empresa"
+            disabled={!!selectedCompany}
+            showSearch
+            filterOption={(input, option) =>
+              option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+            }
+          >
+            {companies && companies.length > 0 ? companies.map(company => (
+              <Option key={company.id} value={company.id}>
+                {company.name} - {company.cnpj}
+              </Option>
+            )) : (
+              <Option value="" disabled>Nenhuma empresa disponível</Option>
+            )}
+          </Select>
+        </Form.Item>
+
         <Form.Item
           name="data"
           label="Data"
           rules={[{ required: true, message: 'Por favor, insira a data' }]}
         >
-          <Input placeholder="DD/MM/AAAA" />
+          <DatePicker 
+            format="DD/MM/YYYY" 
+            style={{ width: '100%' }}
+            placeholder="Selecione a data"
+          />
         </Form.Item>
+
         <Form.Item
           name="numeroCarregamento"
           label="Número do Carregamento"
@@ -68,8 +144,9 @@ export default function CustomModalLoad({ isVisible, onClose, onSubmit }) {
             },
           ]}
         >
-          <Input />
+          <Input placeholder="Ex: 578656" />
         </Form.Item>
+
         <Form.Item
           name="entregas"
           label="Quantidade de Entregas"
@@ -80,31 +157,48 @@ export default function CustomModalLoad({ isVisible, onClose, onSubmit }) {
             },
           ]}
         >
-          <Input type="number" />
+          <InputNumber 
+            min={1} 
+            style={{ width: '100%' }} 
+            placeholder="Ex: 1"
+          />
         </Form.Item>
+
         <Form.Item
           name="pesoCarga"
           label="Peso da Carga (kg)"
           rules={[
             { required: true, message: 'Por favor, insira o peso da carga' },
+            { type: 'number', min: 0.01, message: 'O peso deve ser maior que zero' }
           ]}
         >
-          <Input type="number" step="0.01" />
+          <InputNumber 
+            min={0.01} 
+            step={0.01} 
+            style={{ width: '100%' }} 
+            placeholder="Ex: 8077.07"
+          />
         </Form.Item>
+
         <Form.Item
           name="valorTotal"
           label="Valor Total"
           rules={[
             { required: true, message: 'Por favor, insira o valor total' },
+            { type: 'number', min: 0.01, message: 'O valor deve ser maior que zero' }
           ]}
         >
-          <Input
+          <InputNumber
+            min={0.01}
+            step={0.01}
+            style={{ width: '100%' }}
             placeholder="R$ 0,00"
-            onChange={(e) => {
-              e.target.value = formatCurrency(e.target.value)
-            }}
+            formatter={(value) => `R$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+            parser={(value) => value.replace(/R\$\s?|(\.*)/g, '').replace(',', '.').replace(/\s/g, '')}
+            onChange={handleValorTotalChange}
           />
         </Form.Item>
+
         <Form.Item
           name="frete4"
           label="Valor do Frete 4%"
@@ -113,15 +207,19 @@ export default function CustomModalLoad({ isVisible, onClose, onSubmit }) {
               required: true,
               message: 'Por favor, insira o valor do frete 4%',
             },
+            { type: 'number', min: 0, message: 'O frete deve ser maior ou igual a zero' }
           ]}
         >
-          <Input
+          <InputNumber
+            min={0}
+            step={0.01}
+            style={{ width: '100%' }}
             placeholder="R$ 0,00"
-            onChange={(e) => {
-              e.target.value = formatCurrency(e.target.value)
-            }}
+            formatter={(value) => `R$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+            parser={(value) => value.replace(/R\$\s?|(\.*)/g, '').replace(',', '.').replace(/\s/g, '')}
           />
         </Form.Item>
+
         <Form.Item
           name="somaTotalFrete"
           label="Soma Total Frete"
@@ -130,31 +228,39 @@ export default function CustomModalLoad({ isVisible, onClose, onSubmit }) {
               required: true,
               message: 'Por favor, insira a soma total do frete',
             },
+            { type: 'number', min: 0, message: 'O frete total deve ser maior ou igual a zero' }
           ]}
         >
-          <Input
+          <InputNumber
+            min={0}
+            step={0.01}
+            style={{ width: '100%' }}
             placeholder="R$ 0,00"
-            onChange={(e) => {
-              e.target.value = formatCurrency(e.target.value)
-            }}
+            formatter={(value) => `R$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+            parser={(value) => value.replace(/R\$\s?|(\.*)/g, '').replace(',', '.').replace(/\s/g, '')}
           />
         </Form.Item>
+
         <Form.Item
           name="fechamentos"
           label="Fechamentos (De Quinzena)"
           rules={[
             { required: true, message: 'Por favor, insira o fechamento' },
+            { type: 'number', min: 0, message: 'O fechamento deve ser maior ou igual a zero' }
           ]}
         >
-          <Input
+          <InputNumber
+            min={0}
+            step={0.01}
+            style={{ width: '100%' }}
             placeholder="R$ 0,00"
-            onChange={(e) => {
-              e.target.value = formatCurrency(e.target.value)
-            }}
+            formatter={(value) => `R$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+            parser={(value) => value.replace(/R\$\s?|(\.*)/g, '').replace(',', '.').replace(/\s/g, '')}
           />
         </Form.Item>
+
         <Form.Item name="observacoes" label="Observações">
-          <Input.TextArea rows={3} />
+          <Input.TextArea rows={3} placeholder="Observações adicionais..." />
         </Form.Item>
       </Form>
     </Modal>

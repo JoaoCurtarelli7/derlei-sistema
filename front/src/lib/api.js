@@ -1,6 +1,5 @@
 import axios from 'axios'
 import { message } from 'antd'
-import { useNavigate } from 'react-router-dom'
 
 const api = axios.create({
   baseURL: 'http://localhost:3333',
@@ -31,10 +30,9 @@ api.interceptors.response.use(
       // Token expirado ou inválido
       localStorage.removeItem('token') // Remove o token do localStorage
       message.error('Sua sessão expirou. Faça login novamente.')
-
-      // Redireciona o usuário para a tela de login
-      const navigate = useNavigate() // Hook do react-router-dom
-      navigate('/login') // Altere para a rota de login da sua aplicação
+      
+      // Redireciona para login usando window.location
+      window.location.href = '/login'
     }
 
     return Promise.reject(error)

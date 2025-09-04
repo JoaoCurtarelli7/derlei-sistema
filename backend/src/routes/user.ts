@@ -1,63 +1,175 @@
 import { FastifyInstance } from 'fastify'
 import { prisma } from '../lib/prisma'
 import { hash, compare } from 'bcryptjs'
+import { z } from 'zod'
+import { authenticate } from '../middlewares/authMiddleware'
 
 export async function userRoutes(app: FastifyInstance) {
-  // Editar dados do perfil do usuário
-  app.put('/user/:id', async (request, reply) => {
-    const { id } = request.params as { id: string }
-    const { name, email, phone, address } = request.body as {
-      name: string
-      email: string
-      phone: string
-      address: string
-    }
+  // Aplicar autenticação em todas as rotas
+  app.addHook('preHandler', authenticate)
 
+  // Obter dados do usuário logado
+  app.get('/me', async (request, reply) => {
     try {
-      const updatedUser = await prisma.user.update({
-        where: { id: parseInt(id) },
-        data: { name, email, phone, address },
-      })
+      const userId = request.user.id
 
-      return reply.send(updatedUser)
-    } catch (error) {
-      return reply.status(400).send({ message: 'Erro ao atualizar usuário', error })
-    }
-  })
-
-  // Alterar senha do usuário
-  app.patch('/user/:id/password', async (request, reply) => {
-    const { id } = request.params as { id: string }
-    const { currentPassword, newPassword } = request.body as {
-      currentPassword: string
-      newPassword: string
-    }
-
-    try {
       const user = await prisma.user.findUnique({
-        where: { id: parseInt(id) },
+        where: { id: userId },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          address: true,
+          createdAt: true
+        }
       })
 
       if (!user) {
         return reply.status(404).send({ message: 'Usuário não encontrado' })
       }
 
-      const passwordMatch = await compare(currentPassword, user.password)
+      return reply.send(user)
+    } catch (error) {
+      console.error('Erro ao buscar usuário:', error)
+      return reply.status(500).send({ message: 'Erro interno do servidor' })
+    }
+  })
 
+  // Editar dados do perfil do usuário logado
+  app.put('/me', async (request, reply) => {
+    const updateUserSchema = z.object({
+      name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
+      email: z.string().email('Email inválido'),
+      phone: z.string().optional(),
+      address: z.string().optional()
+    })
+
+    try {
+      const userId = request.user.id
+      const data = updateUserSchema.parse(request.body)
+
+      // Verificar se o email já está em uso por outro usuário
+      if (data.email) {
+        const existingUser = await prisma.user.findFirst({
+          where: {
+            email: data.email,
+            id: { not: userId }
+          }
+        })
+
+        if (existingUser) {
+          return reply.status(400).send({ message: 'Este email já está em uso por outro usuário' })
+        }
+      }
+
+      const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: {
+          name: data.name,
+          email: data.email,
+          phone: data.phone || null,
+          address: data.address || null
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          address: true,
+          createdAt: true
+        }
+      })
+
+      return reply.send({
+        message: 'Perfil atualizado com sucesso!',
+        user: updatedUser
+      })
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return reply.status(400).send({ 
+          message: 'Dados inválidos', 
+          errors: error.errors 
+        })
+      }
+
+      console.error('Erro ao atualizar usuário:', error)
+      return reply.status(500).send({ message: 'Erro interno do servidor' })
+    }
+  })
+
+  // Alterar senha do usuário logado
+  app.patch('/me/password', async (request, reply) => {
+    const changePasswordSchema = z.object({
+      currentPassword: z.string().min(1, 'Senha atual é obrigatória'),
+      newPassword: z.string().min(6, 'Nova senha deve ter pelo menos 6 caracteres')
+    })
+
+    try {
+      const userId = request.user.id
+      const { currentPassword, newPassword } = changePasswordSchema.parse(request.body)
+
+      // Buscar usuário com senha para verificação
+      const user = await prisma.user.findUnique({
+        where: { id: userId }
+      })
+
+      if (!user) {
+        return reply.status(404).send({ message: 'Usuário não encontrado' })
+      }
+
+      // Verificar senha atual
+      const passwordMatch = await compare(currentPassword, user.password)
       if (!passwordMatch) {
         return reply.status(401).send({ message: 'Senha atual incorreta' })
       }
 
+      // Verificar se a nova senha é diferente da atual
+      const newPasswordMatch = await compare(newPassword, user.password)
+      if (newPasswordMatch) {
+        return reply.status(400).send({ message: 'A nova senha deve ser diferente da senha atual' })
+      }
+
+      // Criptografar nova senha
       const hashedNewPassword = await hash(newPassword, 10)
 
+      // Atualizar senha
       await prisma.user.update({
-        where: { id: parseInt(id) },
-        data: { password: hashedNewPassword },
+        where: { id: userId },
+        data: { password: hashedNewPassword }
       })
 
-      return reply.send({ message: 'Senha alterada com sucesso' })
+      return reply.send({ message: 'Senha alterada com sucesso!' })
     } catch (error) {
-      return reply.status(400).send({ message: 'Erro ao alterar senha', error })
+      if (error instanceof z.ZodError) {
+        return reply.status(400).send({ 
+          message: 'Dados inválidos', 
+          errors: error.errors 
+        })
+      }
+
+      console.error('Erro ao alterar senha:', error)
+      return reply.status(500).send({ message: 'Erro interno do servidor' })
+    }
+  })
+
+  // Obter estatísticas do usuário (opcional)
+  app.get('/me/stats', async (request, reply) => {
+    try {
+      const userId = request.user.id
+
+      // Aqui você pode adicionar estatísticas específicas do usuário
+      // Por exemplo: número de ações realizadas, última atividade, etc.
+      const stats = {
+        lastLogin: new Date().toISOString(),
+        profileUpdated: true,
+        // Adicione mais estatísticas conforme necessário
+      }
+
+      return reply.send(stats)
+    } catch (error) {
+      console.error('Erro ao buscar estatísticas:', error)
+      return reply.status(500).send({ message: 'Erro interno do servidor' })
     }
   })
 }

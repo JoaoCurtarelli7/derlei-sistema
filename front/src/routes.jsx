@@ -12,8 +12,10 @@ import VehicleMaintenance from './pages/Vehicle/Maintenance'
 import Login from './pages/Login'
 import UserProfile from './pages/UserProfile'
 import TripList from './pages/Vehicle/Trip'
-import Months from './pages/Closing/Month'
+import Months from './pages/Months'
+import Closings from './pages/Closings'
 import TripExpenses from './pages/Vehicle/TripExpenses'
+import Reports from './pages/Reports'
 import { UserProvider } from './context/userContext'
 
 const router = createBrowserRouter([
@@ -23,7 +25,8 @@ const router = createBrowserRouter([
     children: [
       { path: '/', element: <Home /> },
       { path: '/closing', element: <Closing /> },
-      { path: '/closing-month', element: <Months /> },
+      { path: '/months', element: <Months /> },
+      { path: '/closings', element: <Closings /> },
       { path: '/load', element: <LoadCompanies /> },
       { path: '/load/:id', element: <Load /> },
       { path: '/companies', element: <CompanyList /> },
@@ -35,6 +38,7 @@ const router = createBrowserRouter([
       { path: '/user-profile', element: <UserProfile /> },
       { path: '/vehicle/trip', element: <TripList /> },
       { path: '/vehicle/trip-expenses/:id', element: <TripExpenses /> },
+      { path: '/reports', element: <Reports /> },
     ],
   },
 ])

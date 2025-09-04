@@ -11,15 +11,17 @@ datasource db {
 }
 
 model Company {
-  id               Int      @id @default(autoincrement())
+  id               Int               @id @default(autoincrement())
   name             String
   type             String
-  cnpj             String   @unique
+  cnpj             String            @unique
   dateRegistration DateTime
   status           String
   responsible      String
   commission       Float
   loads            Load[]
+  financialEntries FinancialEntry[]
+  closings         Closing[]
 }
 
 model Employee {
@@ -28,7 +30,16 @@ model Employee {
   role         String
   baseSalary   Float
   status       String // "Ativo" ou "Inativo"
+  cpf          String?
+  phone        String?
+  email        String?
+  address      String?
+  hireDate     DateTime      @default(now())
   transactions Transaction[] // Relacionamento com créditos e débitos
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@map("Employee")
 }
 
 model Transaction {
@@ -79,14 +90,16 @@ model Truck {
 }
 
 model Maintenance {
-  id      Int      @id @default(autoincrement())
-  date    DateTime
-  service String
-  km      Int
-  value   Float
-  notes   String?
-  truckId Int
-  truck   Truck    @relation(fields: [truckId], references: [id])
+  id        Int      @id @default(autoincrement())
+  date      DateTime
+  service   String
+  km        Int
+  value     Float
+  notes     String?
+  truckId   Int
+  truck     Truck    @relation(fields: [truckId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
 model Trip {
@@ -95,15 +108,79 @@ model Trip {
   driver       String
   date         DateTime
   freightValue Float
-  truckId      Int
-  truck        Truck         @relation(fields: [truckId], references: [id])
+  status       String        @default("em_andamento") // "em_andamento", "concluida", "cancelada"
+  notes        String?
+  truckId      Int?
+  truck        Truck?        @relation(fields: [truckId], references: [id])
   expenses     TripExpense[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 }
 
 model TripExpense {
-  id          Int    @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   description String
   amount      Float
+  date        DateTime
+  category    String
+  notes       String?
   tripId      Int
-  trip        Trip   @relation(fields: [tripId], references: [id])
+  trip        Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Modelos para Fechamento Financeiro
+model Month {
+  id          Int      @id @default(autoincrement())
+  year        Int
+  month       Int      // 1-12
+  name        String   // "Janeiro 2024", "Fevereiro 2024", etc.
+  status      String   @default("aberto") // "aberto", "fechado", "cancelado"
+  closings    Closing[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([year, month])
+  @@map("Month")
+}
+
+model Closing {
+  id            Int      @id @default(autoincrement())
+  monthId       Int
+  month         Month    @relation(fields: [monthId], references: [id], onDelete: Cascade)
+  companyId     Int?
+  company       Company? @relation(fields: [companyId], references: [id])
+  name          String   // "1ª Quinzena Jan", "2ª Quinzena Jan", "Mês Completo", etc.
+  startDate     DateTime
+  endDate       DateTime
+  status        String   @default("aberto") // "aberto", "fechado", "cancelado"
+  totalEntries  Float    @default(0)
+  totalExpenses Float    @default(0)
+  totalTaxes    Float    @default(0)
+  balance       Float    @default(0)
+  profitMargin  Float    @default(0)
+  entries       FinancialEntry[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("Closing")
+}
+
+model FinancialEntry {
+  id           Int      @id @default(autoincrement())
+  description  String
+  amount       Float
+  category     String
+  date         DateTime
+  type         String   // "entrada", "saida", "imposto"
+  observations String?
+  closingId    Int?
+  closing      Closing? @relation(fields: [closingId], references: [id], onDelete: Cascade)
+  companyId    Int?
+  company      Company? @relation(fields: [companyId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("FinancialEntry")
 }

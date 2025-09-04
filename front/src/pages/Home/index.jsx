@@ -1,136 +1,351 @@
-import React from 'react'
-import { Card, Row, Col, Typography } from 'antd'
+import React, { useState, useEffect } from 'react'
 import {
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  Tooltip,
-  LineChart,
-  Line,
-} from 'recharts'
+    Card,
+    Row,
+    Col,
+    Typography,
+    Statistic,
+    Spin,
+    Alert,
+    Button,
+    Space, Tag,
+    Progress
+} from 'antd'
+import {
+    TeamOutlined,
+    BankOutlined,
+    CarOutlined,
+    DollarOutlined,
+    FileTextOutlined,
+    PlusOutlined
+} from '@ant-design/icons'
+import { useNavigate } from 'react-router-dom'
+import api from '../../lib/api'
+import dayjs from 'dayjs'
 
-const { Title } = Typography
-
-const maintenanceData = [
-  { name: 'Jan', value: 1200 },
-  { name: 'Feb', value: 1800 },
-  { name: 'Mar', value: 900 },
-  { name: 'Apr', value: 1500 },
-]
-
-const salaryData = [
-  { name: 'Jan', value: 25000 },
-  { name: 'Feb', value: 26000 },
-  { name: 'Mar', value: 25500 },
-  { name: 'Apr', value: 27000 },
-]
-
-const cargoData = [
-  { name: 'Cargas', value: 75 },
-  { name: 'Pedidos', value: 25 },
-]
-
-const employeesData = [
-  { name: 'Ativos', value: 40 },
-  { name: 'Inativos', value: 5 },
-]
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042']
+const { Title, Text } = Typography
 
 export default function Home() {
+  const navigate = useNavigate()
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [dashboardData, setDashboardData] = useState(null)
+
+  useEffect(() => {
+    loadDashboardData()
+  }, [])
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const response = await api.get('/dashboard')
+      setDashboardData(response.data)
+    } catch (error) {
+      console.error('Erro ao carregar dados do dashboard:', error)
+      setError('Erro ao carregar dados do dashboard')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '50px' }}>
+        <Spin size="large" />
+        <div style={{ marginTop: '20px' }}>Carregando dashboard...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <Alert
+        message="Erro ao carregar dashboard"
+        description={error}
+        type="error"
+        showIcon
+        action={
+          <Button size="small" onClick={loadDashboardData}>
+            Tentar Novamente
+          </Button>
+        }
+      />
+    )
+  }
+
+  if (!dashboardData) {
+    return (
+      <Alert
+        message="Nenhum dado disponível"
+        description="Não foi possível carregar os dados do dashboard."
+        type="warning"
+        showIcon
+      />
+    )
+  }
+
+  const { summary, charts } = dashboardData
+
+  // Função para formatar valores monetários
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value)
+  }
+
+  // Função para formatar números
+  const formatNumber = (value) => {
+    return new Intl.NumberFormat('pt-BR').format(value)
+  }
+
+  // Calcular percentual de funcionários ativos
+  const employeeActivePercentage = summary.totalEmployees > 0 
+    ? Math.round((summary.activeEmployees / summary.totalEmployees) * 100)
+    : 0
+
+  // Calcular percentual de empresas ativas
+  const companyActivePercentage = summary.totalCompanies > 0
+    ? Math.round((summary.activeCompanies / summary.totalCompanies) * 100)
+    : 0
+
   return (
-    <div style={{ margin: '20px' }}>
-      <Title level={2}>Dashboard Geral</Title>
-      <Row gutter={16}>
-        {/* Gráfico de Manutenção */}
-        <Col xs={24} sm={12} lg={8}>
-          <Card title="Gastos com Manutenção" bordered>
-            <BarChart width={300} height={250} data={maintenanceData}>
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="value" fill="#8884d8" />
-            </BarChart>
+    <div style={{ padding: '20px', backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
+      {/* Cabeçalho */}
+      <div style={{ marginBottom: '24px' }}>
+        <Title level={2} style={{ margin: 0, color: '#1890ff' }}>
+          🚀 Dashboard do Sistema
+        </Title>
+        <Text type="secondary">
+          Visão geral completa do sistema de gestão
+        </Text>
+      </div>
+
+      {/* Cards de Estatísticas Principais */}
+      <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
+        <Col xs={24} sm={12} lg={6}>
+          <Card hoverable>
+            <Statistic
+              title="Total de Funcionários"
+              value={summary.totalEmployees}
+              prefix={<TeamOutlined style={{ color: '#1890ff' }} />}
+              suffix={
+                <Tag color="green" style={{ marginLeft: 8 }}>
+                  {summary.activeEmployees} ativos
+                </Tag>
+              }
+            />
+            <Progress 
+              percent={employeeActivePercentage} 
+              size="small" 
+              strokeColor="#52c41a"
+              style={{ marginTop: 8 }}
+            />
           </Card>
         </Col>
 
-        {/* Gráfico de Salário */}
-        <Col xs={24} sm={12} lg={8}>
-          <Card title="Gastos com Salários" bordered>
-            <LineChart width={300} height={250} data={salaryData}>
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Line type="monotone" dataKey="value" stroke="#82ca9d" />
-            </LineChart>
+        <Col xs={24} sm={12} lg={6}>
+          <Card hoverable>
+            <Statistic
+              title="Total de Empresas"
+              value={summary.totalCompanies}
+              prefix={<BankOutlined style={{ color: '#52c41a' }} />}
+              suffix={
+                <Tag color="blue" style={{ marginLeft: 8 }}>
+                  {summary.activeCompanies} ativas
+                </Tag>
+              }
+            />
+            <Progress 
+              percent={companyActivePercentage} 
+              size="small" 
+              strokeColor="#1890ff"
+              style={{ marginTop: 8 }}
+            />
           </Card>
         </Col>
 
-        {/* Gráfico de Cargas/Pedidos */}
-        <Col xs={24} sm={12} lg={8}>
-          <Card title="Cargas vs Pedidos" bordered>
-            <PieChart width={300} height={250}>
-              <Pie
-                data={cargoData}
-                cx="50%"
-                cy="50%"
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-                label
-              >
-                {cargoData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={COLORS[index % COLORS.length]}
-                  />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
+        <Col xs={24} sm={12} lg={6}>
+          <Card hoverable>
+            <Statistic
+              title="Total de Cargas"
+              value={summary.totalLoads}
+              prefix={<FileTextOutlined style={{ color: '#faad14' }} />}
+            />
+            <Text type="secondary" style={{ fontSize: '12px' }}>
+              Cargas registradas no sistema
+            </Text>
+          </Card>
+        </Col>
+
+        <Col xs={24} sm={12} lg={6}>
+          <Card hoverable>
+            <Statistic
+              title="Total de Caminhões"
+              value={summary.totalTrucks}
+              prefix={<CarOutlined style={{ color: '#722ed1' }} />}
+            />
+            <Text type="secondary" style={{ fontSize: '12px' }}>
+              Frota disponível
+            </Text>
           </Card>
         </Col>
       </Row>
 
-      <Row gutter={16} style={{ marginTop: '20px' }}>
-        {/* Gráfico de Funcionários */}
+      {/* Cards Financeiros */}
+      <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
         <Col xs={24} sm={12} lg={8}>
-          <Card title="Funcionários" bordered>
-            <PieChart width={300} height={250}>
-              <Pie
-                data={employeesData}
-                cx="50%"
-                cy="50%"
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-                label
-              >
-                {employeesData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={COLORS[index % COLORS.length]}
-                  />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
+          <Card 
+            title={
+              <Space>
+                <DollarOutlined style={{ color: '#52c41a' }} />
+                <span>Folha Salarial Mensal</span>
+              </Space>
+            }
+            hoverable
+            style={{ borderLeft: '4px solid #52c41a' }}
+          >
+            <Statistic
+              title="Total Salários"
+              value={formatCurrency(summary.totalSalaries)}
+              valueStyle={{ color: '#52c41a', fontSize: '24px' }}
+            />
+            <Text type="secondary">
+              {summary.activeEmployees} funcionários ativos
+            </Text>
           </Card>
         </Col>
 
-        {/* Indicador Geral */}
         <Col xs={24} sm={12} lg={8}>
-          <Card title="Fechamento Mensal" bordered>
-            <Title level={4}>Total Receita: R$ 80.000</Title>
-            <Title level={4}>Total Despesas: R$ 50.000</Title>
-            <Title level={4}>Lucro: R$ 30.000</Title>
+          <Card 
+            title={
+              <Space>
+                <DollarOutlined style={{ color: '#faad14' }} />
+                <span>Status Financeiro</span>
+              </Space>
+            }
+            hoverable
+            style={{ borderLeft: '4px solid #faad14' }}
+          >
+            <Statistic
+              title="Saldo Atual"
+              value={formatCurrency(0)}
+              valueStyle={{ color: '#faad14', fontSize: '24px' }}
+            />
+            <Text type="secondary">
+              Dados em desenvolvimento
+            </Text>
+          </Card>
+        </Col>
+
+        <Col xs={24} sm={12} lg={8}>
+          <Card 
+            title={
+              <Space>
+                <DollarOutlined style={{ color: '#1890ff' }} />
+                <span>Resumo Geral</span>
+              </Space>
+            }
+            hoverable
+            style={{ borderLeft: '4px solid #1890ff' }}
+          >
+            <Statistic
+              title="Total Geral"
+              value={formatCurrency(summary.totalSalaries)}
+              valueStyle={{ color: '#1890ff', fontSize: '24px' }}
+            />
+            <Text type="secondary">
+              Custo total do sistema
+            </Text>
           </Card>
         </Col>
       </Row>
+
+      {/* Ações Rápidas */}
+      <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
+        <Col xs={24}>
+          <Card title="Ações Rápidas" hoverable>
+            <Space wrap size="large">
+              <Button 
+                type="primary" 
+                icon={<PlusOutlined />}
+                onClick={() => navigate('/employee')}
+                size="large"
+              >
+                Adicionar Funcionário
+              </Button>
+              <Button 
+                type="default" 
+                icon={<BankOutlined />}
+                onClick={() => navigate('/companies')}
+                size="large"
+              >
+                Gerenciar Empresas
+              </Button>
+              <Button 
+                type="default" 
+                icon={<FileTextOutlined />}
+                onClick={() => navigate('/load')}
+                size="large"
+              >
+                Nova Carga
+              </Button>
+              <Button 
+                type="default" 
+                icon={<CarOutlined />}
+                onClick={() => navigate('/vehicle-maintenance')}
+                size="large"
+              >
+                Manutenções
+              </Button>
+            </Space>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Resumo Detalhado */}
+      <Row gutter={[16, 16]}>
+        <Col xs={24} lg={12}>
+          <Card title="Resumo do Sistema" hoverable>
+            <div style={{ textAlign: 'center', padding: '20px' }}>
+              <Title level={4} style={{ color: '#1890ff' }}>
+                Sistema Funcionando!
+              </Title>
+              <Text type="secondary">
+                Dashboard simplificado para teste
+              </Text>
+            </div>
+          </Card>
+        </Col>
+
+        <Col xs={24} lg={12}>
+          <Card title="Estatísticas do Sistema" hoverable>
+            <div style={{ textAlign: 'center', padding: '20px' }}>
+              <Title level={4} style={{ color: '#52c41a' }}>
+                {summary.totalEmployees} Funcionários
+              </Title>
+              <Text type="secondary">
+                {summary.activeEmployees} ativos
+              </Text>
+            </div>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Rodapé */}
+      <div style={{ textAlign: 'center', marginTop: '32px', padding: '16px' }}>
+        <Text type="secondary">
+          Última atualização: {dayjs().format('DD/MM/YYYY HH:mm')}
+        </Text>
+        <br />
+        <Button 
+          type="link" 
+          onClick={loadDashboardData}
+        >
+          Atualizar Dados
+        </Button>
+      </div>
     </div>
   )
 }

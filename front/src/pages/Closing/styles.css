@@ -1,40 +1,397 @@
-.closing-card {
-  margin: 20px;
-  padding: 30px;
-  background-color: #f9f9f9;
+/* Container Principal */
+.closing-container {
+  padding: 24px;
+  background: #f5f5f5;
+  min-height: 100vh;
+}
+
+/* Card de Seleção de Período */
+.period-selector-card {
+  margin-bottom: 24px;
   border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
 }
 
-.custom-card {
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 20px;
+.period-selector-card .ant-card-body {
+  padding: 24px;
 }
 
-.totais-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.period-selector-card .ant-typography {
+  color: white;
 }
 
-.action-buttons {
-  margin-top: 20px;
-  text-align: center;
-}
-
-.action-buttons .ant-btn {
+.period-selector-card .ant-select,
+.period-selector-card .ant-picker {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 8px;
+}
+
+.period-selector-card .ant-select-selector,
+.period-selector-card .ant-picker-input > input {
+  background: transparent !important;
+  color: white !important;
+}
+
+.period-selector-card .ant-select-arrow,
+.period-selector-card .ant-picker-suffix {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.period-selector-card .ant-select-selection-placeholder,
+.period-selector-card .ant-picker-input > input::placeholder {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.period-selector-card .ant-btn-primary {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  border-radius: 8px;
+  height: 40px;
+  font-weight: 500;
+}
+
+.period-selector-card .ant-btn-primary:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: white;
+}
+
+/* Cards de Resumo */
+.summary-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: none;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.summary-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.summary-card.entrada {
+  background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+  border-left: 4px solid #389e0d;
+}
+
+.summary-card.saida {
+  background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
+  border-left: 4px solid #cf1322;
+}
+
+.summary-card.imposto {
+  background: linear-gradient(135deg, #faad14 0%, #ffc53d 100%);
+  border-left: 4px solid #d48806;
+}
+
+.summary-card.saldo {
+  background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+  border-left: 4px solid #096dd9;
+}
+
+.summary-card .ant-card-body {
+  padding: 24px;
+}
+
+.summary-card .ant-statistic-title {
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.summary-card .ant-statistic-content {
+  color: white !important;
+}
+
+.summary-card .ant-statistic-content-value {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.summary-card .ant-statistic-content-prefix {
+  margin-right: 8px;
+  font-size: 20px;
+}
+
+.summary-card .ant-progress {
+  margin-top: 12px;
+}
+
+.summary-card .ant-progress-bg {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Cards de Dados */
+.data-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: none;
+  transition: all 0.3s ease;
+  height: 100%;
+}
+
+.data-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.data-card.entrada .ant-card-head {
+  background: linear-gradient(135deg, #f6ffed 0%, #d9f7be 100%);
+  border-bottom: 2px solid #52c41a;
+}
+
+.data-card.saida .ant-card-head {
+  background: linear-gradient(135deg, #fff2f0 0%, #ffccc7 100%);
+  border-bottom: 2px solid #ff4d4f;
+}
+
+.data-card.imposto .ant-card-head {
+  background: linear-gradient(135deg, #fffbe6 0%, #fff1b8 100%);
+  border-bottom: 2px solid #faad14;
+}
+
+.data-card .ant-card-head-title {
+  font-weight: 600;
   font-size: 16px;
-  padding: 6px 20px;
+}
+
+.data-card .ant-card-extra {
+  margin: 0;
+}
+
+.data-card .ant-card-body {
+  padding: 16px;
+}
+
+/* Tabelas */
+.data-card .ant-table {
+  background: transparent;
+}
+
+.data-card .ant-table-thead > tr > th {
+  background: rgba(0, 0, 0, 0.02);
+  border-bottom: 1px solid #f0f0f0;
+  font-weight: 600;
+  color: #262626;
+}
+
+.data-card .ant-table-tbody > tr > td {
+  border-bottom: 1px solid #f0f0f0;
+  padding: 12px 16px;
+}
+
+.data-card .ant-table-tbody > tr:hover > td {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+/* Card de Resumo Final */
+.final-summary-card {
+  margin-top: 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: none;
+  background: linear-gradient(135deg, #fafafa 0%, #f0f0f0 100%);
+}
+
+.final-summary-card .ant-card-body {
+  padding: 24px;
+}
+
+.summary-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.summary-item .ant-typography {
+  margin: 0;
+}
+
+/* Alertas */
+.ant-alert {
+  border-radius: 8px;
+  border: none;
+}
+
+.ant-alert-info {
+  background: rgba(24, 144, 255, 0.1);
+  border: 1px solid rgba(24, 144, 255, 0.2);
+}
+
+/* Botões */
+.ant-btn {
+  border-radius: 8px;
+  font-weight: 500;
+  height: 40px;
+  padding: 0 20px;
 }
 
 .ant-btn-primary {
-  background-color: #4caf50;
-  border-color: #4caf50;
+  background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+  border: none;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
 }
 
 .ant-btn-primary:hover {
-  background-color: #45a049;
-  border-color: #45a049;
+  background: linear-gradient(135deg, #40a9ff 0%, #69c0ff 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.4);
+}
+
+.ant-btn-default {
+  border: 1px solid #d9d9d9;
+  background: white;
+}
+
+.ant-btn-default:hover {
+  border-color: #40a9ff;
+  color: #40a9ff;
+}
+
+/* Tags */
+.ant-tag {
+  border-radius: 6px;
+  font-weight: 500;
+  border: none;
+}
+
+/* Responsividade */
+@media (max-width: 1200px) {
+  .closing-container {
+    padding: 16px;
+  }
+  
+  .period-selector-card .ant-card-body {
+    padding: 16px;
+  }
+  
+  .summary-card .ant-card-body {
+    padding: 16px;
+  }
+  
+  .summary-card .ant-statistic-content-value {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .closing-container {
+    padding: 12px;
+  }
+  
+  .period-selector-card .ant-row {
+    margin: 0 !important;
+  }
+  
+  .period-selector-card .ant-col {
+    margin-bottom: 12px;
+  }
+  
+  .summary-card .ant-statistic-content-value {
+    font-size: 20px;
+  }
+  
+  .data-card .ant-card-head-title {
+    font-size: 14px;
+  }
+}
+
+/* Animações */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.closing-container > * {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.closing-container > *:nth-child(1) { animation-delay: 0.1s; }
+.closing-container > *:nth-child(2) { animation-delay: 0.2s; }
+.closing-container > *:nth-child(3) { animation-delay: 0.3s; }
+.closing-container > *:nth-child(4) { animation-delay: 0.4s; }
+
+/* Scrollbars personalizados */
+.data-card .ant-table-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.data-card .ant-table-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.data-card .ant-table-body::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.data-card .ant-table-body::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Melhorias para o modal */
+.ant-modal-content {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.ant-modal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-bottom: none;
+}
+
+.ant-modal-title {
+  color: white;
+  font-weight: 600;
+}
+
+.ant-modal-close {
+  color: white;
+}
+
+.ant-modal-close:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.ant-form-item-label > label {
+  font-weight: 500;
+  color: #262626;
+}
+
+.ant-input,
+.ant-select-selector,
+.ant-picker {
+  border-radius: 8px;
+  border: 1px solid #d9d9d9;
+  transition: all 0.3s ease;
+}
+
+.ant-input:focus,
+.ant-select-focused .ant-select-selector,
+.ant-picker-focused {
+  border-color: #40a9ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+.ant-input-number {
+  border-radius: 8px;
+}
+
+.ant-input-number:focus,
+.ant-input-number-focused {
+  border-color: #40a9ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
 }

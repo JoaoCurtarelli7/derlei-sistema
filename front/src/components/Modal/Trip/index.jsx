@@ -70,14 +70,6 @@ export default function TripModal({
         </Form.Item>
 
         <Form.Item
-          label="Caminhão"
-          name="truck"
-          rules={[{ required: true, message: 'Por favor, insira o caminhão!' }]}
-        >
-          <Input placeholder="Caminhão utilizado" />
-        </Form.Item>
-
-        <Form.Item
           label="Valor"
           name="freightValue"
           rules={[
