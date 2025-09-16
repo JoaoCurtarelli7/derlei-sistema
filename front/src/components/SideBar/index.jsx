@@ -7,9 +7,7 @@ import {
     TruckOutlined,
     UserOutlined,
     ShopOutlined,
-    PrinterOutlined,
-    CalendarOutlined,
-    CalculatorOutlined
+    PrinterOutlined, CalculatorOutlined
 } from '@ant-design/icons'
 import { useUserContext } from '../../context/userContext'
 import './styles.css'
@@ -33,11 +31,6 @@ export default function AppSidebar() {
       icon: <UserOutlined />,
       label: 'Gestão',
       children: [
-        {
-          key: '/months',
-          icon: <CalendarOutlined />,
-          label: <Link to="/months">Meses</Link>
-        },
         {
           key: '/closings',
           icon: <CalculatorOutlined />,

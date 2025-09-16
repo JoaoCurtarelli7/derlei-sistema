@@ -46,15 +46,15 @@ export default function Closing() {
   const [selectedPeriod, setSelectedPeriod] = useState(null)
   const [selectedCompany, setSelectedCompany] = useState(null)
   const [companies, setCompanies] = useState([])
+  const [months, setMonths] = useState([])
   const [loading, setLoading] = useState(false)
   const [entries, setEntries] = useState([])
 
-  // Carregar empresas ao montar o componente
   useEffect(() => {
     fetchCompanies()
+    fetchMonths()
   }, [])
 
-  // Carregar dados financeiros quando período ou empresa mudar
   useEffect(() => {
     if (selectedPeriod) {
       fetchFinancialData()
@@ -66,8 +66,16 @@ export default function Closing() {
       const response = await api.get('/companies')
       setCompanies(response.data)
     } catch (error) {
-      console.error('Erro ao carregar empresas:', error)
       message.error('Erro ao carregar empresas')
+    }
+  }
+
+  const fetchMonths = async () => {
+    try {
+      const response = await api.get('/months')
+      setMonths(response.data)
+    } catch (error) {
+      message.error('Erro ao carregar meses')
     }
   }
 
@@ -91,6 +99,15 @@ export default function Closing() {
           startDate = selectedPeriod.startOf('month').format('YYYY-MM-DD')
           endDate = selectedPeriod.endOf('month').format('YYYY-MM-DD')
           break
+        case 'api-month':
+          const month = months.find(m => m.id === selectedPeriod)
+          if (month) {
+            startDate = dayjs().year(month.year).month(month.month - 1).startOf('month').format('YYYY-MM-DD')
+            endDate = dayjs().year(month.year).month(month.month - 1).endOf('month').format('YYYY-MM-DD')
+          } else {
+            return
+          }
+          break
         case 'period':
           startDate = selectedPeriod[0].format('YYYY-MM-DD')
           endDate = selectedPeriod[1].format('YYYY-MM-DD')
@@ -108,7 +125,6 @@ export default function Closing() {
       const response = await api.get('/financial/entries', { params })
       setEntries(response.data.entries || [])
     } catch (error) {
-      console.error('Erro ao carregar dados financeiros:', error)
       message.error('Erro ao carregar dados financeiros')
     } finally {
       setLoading(false)
@@ -181,6 +197,9 @@ export default function Closing() {
         return `Quinzena: ${selectedPeriod[0].format('DD/MM')} a ${selectedPeriod[1].format('DD/MM/YYYY')}`
       case 'month':
         return `Mês: ${selectedPeriod.format('MMMM/YYYY')}`
+      case 'api-month':
+        const month = months.find(m => m.id === selectedPeriod)
+        return month ? `Mês: ${month.name}` : 'Mês não encontrado'
       case 'period':
         return `Período: ${selectedPeriod[0].format('DD/MM/YYYY')} a ${selectedPeriod[1].format('DD/MM/YYYY')}`
       default:
@@ -349,6 +368,7 @@ export default function Closing() {
               <Option value="week">Semana</Option>
               <Option value="biweekly">Quinzena</Option>
               <Option value="month">Mês</Option>
+              <Option value="api-month">Mês (API)</Option>
               <Option value="period">Período Personalizado</Option>
             </Select>
           </Col>
@@ -366,6 +386,20 @@ export default function Closing() {
                 onChange={handleDateChange}
                 placeholder="Selecione o mês"
               />
+            ) : periodType === 'api-month' ? (
+              <Select
+                style={{ width: '100%' }}
+                onChange={handleDateChange}
+                placeholder="Selecione o mês"
+                showSearch
+                optionFilterProp="children"
+              >
+                {months.map(month => (
+                  <Option key={month.id} value={month.id}>
+                    {month.name}
+                  </Option>
+                ))}
+              </Select>
             ) : (
               <DatePicker
                 picker={periodType === 'week' ? 'week' : 'date'}
@@ -601,7 +635,7 @@ export default function Closing() {
               <Button 
                 type="default" 
                 icon={<EyeOutlined />}
-                onClick={() => console.log('Visualizar relatório')}
+                onClick={() => {}}
               >
                 Visualizar
               </Button>

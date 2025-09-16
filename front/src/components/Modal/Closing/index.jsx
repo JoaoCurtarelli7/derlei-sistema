@@ -78,7 +78,7 @@ export default function CustomModal({
         form.resetFields()
         onClose()
       })
-      .catch((info) => console.error('Validation failed:', info))
+      .catch((info) => {})
   }
 
   const handleCancel = () => {

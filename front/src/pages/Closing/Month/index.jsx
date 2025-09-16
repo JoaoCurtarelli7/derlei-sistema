@@ -1,24 +1,60 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Card, Button, Input, List, Typography, Space, Divider } from 'antd'
+import { Card, Button, Input, List, Typography, Space, Divider, message, Select, DatePicker } from 'antd'
 import { PlusOutlined, ArrowRightOutlined } from '@ant-design/icons'
+import api from '../../../lib/api'
+import dayjs from 'dayjs'
 
 const { Title, Text } = Typography
+const { Option } = Select
 
 export default function Months() {
   const [months, setMonths] = useState([])
-  const [newMonth, setNewMonth] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [selectedYear, setSelectedYear] = useState(dayjs().year())
+  const [selectedMonth, setSelectedMonth] = useState(dayjs().month() + 1)
   const navigate = useNavigate()
 
-  const handleAddMonth = () => {
-    if (newMonth.trim()) {
-      setMonths([...months, { id: Date.now(), name: newMonth }])
-      setNewMonth('')
+  useEffect(() => {
+    fetchMonths()
+  }, [])
+
+  const fetchMonths = async () => {
+    setLoading(true)
+    try {
+      const response = await api.get('/months')
+      setMonths(response.data)
+    } catch (error) {
+      message.error('Erro ao carregar meses')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleAddMonth = async () => {
+    if (!selectedYear || !selectedMonth) {
+      message.warning('Selecione ano e mês')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const response = await api.post('/months', {
+        year: selectedYear,
+        month: selectedMonth
+      })
+      message.success('Mês criado com sucesso!')
+      fetchMonths()
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || 'Erro ao criar mês'
+      message.error(errorMessage)
+    } finally {
+      setLoading(false)
     }
   }
 
   const handleNavigate = (month) => {
-    navigate(`/closing`, { state: { monthName: month.name } })
+    navigate(`/closing`, { state: { monthId: month.id, monthName: month.name } })
   }
 
   return (
@@ -44,17 +80,33 @@ export default function Months() {
         </Title>
         <Space direction="vertical" style={{ width: '100%' }}>
           <div style={{ display: 'flex', gap: '10px' }}>
-            <Input
-              value={newMonth}
-              onChange={(e) => setNewMonth(e.target.value)}
-              placeholder="Digite o nome do mês (ex: Janeiro 2025)"
-              allowClear
-              style={{ borderRadius: '8px', flex: 1 }}
-            />
+            <Select
+              value={selectedYear}
+              onChange={setSelectedYear}
+              style={{ width: '120px' }}
+              placeholder="Ano"
+            >
+              {Array.from({ length: 10 }, (_, i) => dayjs().year() - 5 + i).map(year => (
+                <Option key={year} value={year}>{year}</Option>
+              ))}
+            </Select>
+            <Select
+              value={selectedMonth}
+              onChange={setSelectedMonth}
+              style={{ width: '150px' }}
+              placeholder="Mês"
+            >
+              {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
+                <Option key={month} value={month}>
+                  {dayjs().month(month - 1).format('MMMM')}
+                </Option>
+              ))}
+            </Select>
             <Button
               type="primary"
               icon={<PlusOutlined />}
               onClick={handleAddMonth}
+              loading={loading}
               style={{ borderRadius: '8px' }}
             >
               Adicionar
@@ -65,11 +117,12 @@ export default function Months() {
             <List
               dataSource={months}
               bordered={false}
+              loading={loading}
               renderItem={(month) => (
                 <List.Item
                   style={{
                     borderRadius: '8px',
-                    padding: '10px 15px',
+                    padding: '15px',
                     background: '#f9f9f9',
                     marginBottom: '8px',
                     boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)',
@@ -78,7 +131,14 @@ export default function Months() {
                     alignItems: 'center',
                   }}
                 >
-                  <Text strong>{month.name}</Text>
+                  <div>
+                    <Text strong style={{ fontSize: '16px' }}>{month.name}</Text>
+                    <div style={{ marginTop: '4px' }}>
+                      <Text type="secondary" style={{ fontSize: '12px' }}>
+                        {month.closings?.length || 0} fechamentos
+                      </Text>
+                    </div>
+                  </div>
                   <Button
                     type="link"
                     key={month.id}

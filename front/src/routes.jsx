@@ -12,7 +12,6 @@ import VehicleMaintenance from './pages/Vehicle/Maintenance'
 import Login from './pages/Login'
 import UserProfile from './pages/UserProfile'
 import TripList from './pages/Vehicle/Trip'
-import Months from './pages/Months'
 import Closings from './pages/Closings'
 import TripExpenses from './pages/Vehicle/TripExpenses'
 import Reports from './pages/Reports'
@@ -25,7 +24,6 @@ const router = createBrowserRouter([
     children: [
       { path: '/', element: <Home /> },
       { path: '/closing', element: <Closing /> },
-      { path: '/months', element: <Months /> },
       { path: '/closings', element: <Closings /> },
       { path: '/load', element: <LoadCompanies /> },
       { path: '/load/:id', element: <Load /> },
