@@ -5,6 +5,7 @@ import { PlusCircleOutlined } from '@ant-design/icons';
 import { FaTrash, FaDollarSign, FaEdit } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../../lib';
+import dayjs from 'dayjs';
 
 const { Title } = Typography;
 
@@ -78,7 +79,12 @@ export default function TripList() {
   const columns = [
     { title: 'Destino', dataIndex: 'destination', key: 'destination' },
     { title: 'Motorista', dataIndex: 'driver', key: 'driver' },
-    { title: 'Data', dataIndex: 'date', key: 'date' },
+    { 
+      title: 'Data', 
+      dataIndex: 'date', 
+      key: 'date',
+      render: (date) => date ? dayjs(date).format('DD/MM/YYYY') : '-'
+    },
     { title: 'Caminhão', dataIndex: 'truck', key: 'truck' },
     {
       title: 'Ações',

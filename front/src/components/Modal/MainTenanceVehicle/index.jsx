@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'
-import { Modal, Form, Input, InputNumber, Button } from 'antd'
+import { Modal, Form, Input, InputNumber, Button, DatePicker } from 'antd'
+import dayjs from 'dayjs'
 
 export default function VehicleMaintenanceModal({
   visible,
@@ -13,7 +14,10 @@ export default function VehicleMaintenanceModal({
   // Set form fields when editing
   useEffect(() => {
     if (editingMaintenance) {
-      form.setFieldsValue(editingMaintenance)
+      form.setFieldsValue({
+        ...editingMaintenance,
+        data: editingMaintenance.data ? dayjs(editingMaintenance.data) : null
+      })
     }
   }, [editingMaintenance, form])
 
@@ -21,10 +25,14 @@ export default function VehicleMaintenanceModal({
     form
       .validateFields()
       .then((values) => {
+        const formattedValues = {
+          ...values,
+          data: values.data ? values.data.format('DD/MM/YYYY') : null
+        }
         if (editingMaintenance) {
-          onEditMaintenance(values) // Call edit function
+          onEditMaintenance(formattedValues) // Call edit function
         } else {
-          onAddMaintenance(values) // Call add function
+          onAddMaintenance(formattedValues) // Call add function
         }
         form.resetFields()
       })
@@ -61,7 +69,11 @@ export default function VehicleMaintenanceModal({
             },
           ]}
         >
-          <Input />
+          <DatePicker 
+            style={{ width: '100%' }} 
+            format="DD/MM/YYYY"
+            placeholder="Selecione a data"
+          />
         </Form.Item>
         <Form.Item
           name="servico"

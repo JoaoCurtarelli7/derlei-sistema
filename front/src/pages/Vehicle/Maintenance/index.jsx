@@ -1,31 +1,41 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Card, Table, Typography, Button, message } from 'antd';
 import { useParams } from 'react-router-dom';
 import VehicleMaintenanceModal from '../../../components/Modal/MainTenanceVehicle';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 import { api } from '../../../lib';
+import dayjs from 'dayjs';
 
 const { Title } = Typography;
 
 export default function VehicleMaintenanceList() {
-  const { id } = useParams(); // id do caminhão
+  const { id } = useParams(); 
   const [maintenanceData, setMaintenanceData] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingMaintenance, setEditingMaintenance] = useState(null);
 
-  // Total gasto calculado
-  const totalGasto = maintenanceData.reduce((acc, curr) => acc + curr.valor, 0);
 
-  // Carregar manutenções do caminhão
-  const fetchMaintenance = async () => {
+  const fetchMaintenance = useCallback(async () => {
     try {
       const response = await api.get(`/trucks/${id}/maintenances`);
-      setMaintenanceData(response.data);
+      console.log('API response ->', response.data);
+  
+      // pega direto a chave correta
+      const arr = Array.isArray(response.data.maintenances)
+        ? response.data.maintenances
+        : [];
+  
+      setMaintenanceData(arr);
     } catch (error) {
-      console.error(error);
+      console.error('Erro ao carregar manutenções:', error);
       message.error('Erro ao carregar manutenções');
+      setMaintenanceData([]);
     }
-  };
+  }, [id]);
+  
+  const totalGasto = Array.isArray(maintenanceData)
+  ? maintenanceData.reduce((acc, curr) => acc + (curr.valor || 0), 0)
+  : 0;
 
   useEffect(() => {
     fetchMaintenance();
@@ -85,7 +95,12 @@ export default function VehicleMaintenanceList() {
   };
 
   const columns = [
-    { title: 'Data', dataIndex: 'data', key: 'data' },
+    { 
+      title: 'Data', 
+      dataIndex: 'data', 
+      key: 'data',
+      render: (date) => date ? dayjs(date).format('DD/MM/YYYY') : '-'
+    },
     { title: 'Serviço Realizado', dataIndex: 'servico', key: 'servico' },
     { title: 'KM', dataIndex: 'km', key: 'km', align: 'right' },
     { title: 'Valor (R$)', dataIndex: 'valor', key: 'valor', align: 'right' },
@@ -120,16 +135,17 @@ export default function VehicleMaintenanceList() {
       </Button>
 
       <Table
-        dataSource={maintenanceData}
-        columns={columns}
-        pagination={{ pageSize: 5 }}
-        rowKey="id"
-        footer={() => (
-          <div style={{ textAlign: 'right', fontWeight: 'bold' }}>
-            Total Gasto: R$ {totalGasto.toFixed(2)}
-          </div>
-        )}
-      />
+  dataSource={Array.isArray(maintenanceData) ? maintenanceData : []}
+  columns={columns}
+  rowKey="id"
+  pagination={{ pageSize: 5 }}
+  footer={() => (
+    <div style={{ textAlign: "right", fontWeight: "bold" }}>
+      Total Gasto: R$ {maintenanceData.reduce((acc, curr) => acc + (curr.valor || 0), 0).toFixed(2)}
+    </div>
+  )}
+/>
+
 
       <VehicleMaintenanceModal
         visible={isModalVisible}

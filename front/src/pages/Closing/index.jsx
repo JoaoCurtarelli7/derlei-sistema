@@ -30,6 +30,7 @@ import {
 } from '@ant-design/icons'
 import * as XLSX from 'xlsx'
 import dayjs from 'dayjs'
+import { useSearchParams } from 'react-router-dom'
 import CustomModal from '../../components/Modal/Closing'
 import api from '../../lib/api'
 import './styles.css'
@@ -39,6 +40,7 @@ const { Option } = Select
 const { RangePicker } = DatePicker
 
 export default function Closing() {
+  const [searchParams] = useSearchParams()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [currentType, setCurrentType] = useState('')
   const [editingEntry, setEditingEntry] = useState(null)
@@ -49,17 +51,26 @@ export default function Closing() {
   const [months, setMonths] = useState([])
   const [loading, setLoading] = useState(false)
   const [entries, setEntries] = useState([])
+  const [closingId, setClosingId] = useState(null)
+  const [closingData, setClosingData] = useState(null)
 
   useEffect(() => {
     fetchCompanies()
     fetchMonths()
-  }, [])
+    
+    // Verificar se há closingId na URL
+    const closingIdParam = searchParams.get('closingId')
+    if (closingIdParam) {
+      setClosingId(parseInt(closingIdParam))
+      fetchClosingData(parseInt(closingIdParam))
+    }
+  }, [searchParams])
 
   useEffect(() => {
-    if (selectedPeriod) {
+    if (selectedPeriod && !closingId) {
       fetchFinancialData()
     }
-  }, [selectedPeriod, selectedCompany])
+  }, [selectedPeriod, selectedCompany, closingId])
 
   const fetchCompanies = async () => {
     try {
@@ -76,6 +87,20 @@ export default function Closing() {
       setMonths(response.data)
     } catch (error) {
       message.error('Erro ao carregar meses')
+    }
+  }
+
+  const fetchClosingData = async (id) => {
+    try {
+      setLoading(true)
+      const response = await api.get(`/closings/${id}/entries`)
+      setClosingData(response.data.closing)
+      setEntries(response.data.entries || [])
+    } catch (error) {
+      console.error('Erro ao carregar dados do fechamento:', error)
+      message.error('Erro ao carregar dados do fechamento')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -135,7 +160,8 @@ export default function Closing() {
     try {
       const entryData = {
         ...values,
-        companyId: selectedCompany || undefined
+        companyId: selectedCompany || null,
+        closingId: closingId || null
       }
 
       if (editingEntry) {
@@ -146,12 +172,21 @@ export default function Closing() {
         message.success('Entrada financeira criada com sucesso!')
       }
 
-      fetchFinancialData()
+      if (closingId) {
+        fetchClosingData(closingId)
+      } else {
+        fetchFinancialData()
+      }
       setIsModalOpen(false)
       setEditingEntry(null)
     } catch (error) {
       console.error('Erro ao salvar entrada financeira:', error)
-      message.error(error.response?.data?.message || 'Erro ao salvar entrada financeira')
+      if (error.response?.data?.errors) {
+        const errorMessages = error.response.data.errors.map(err => err.message).join(', ')
+        message.error(`Erro de validação: ${errorMessages}`)
+      } else {
+        message.error(error.response?.data?.message || 'Erro ao salvar entrada financeira')
+      }
     }
   }
 
@@ -159,7 +194,12 @@ export default function Closing() {
     try {
       await api.delete(`/financial/entries/${id}`)
       message.success('Entrada financeira deletada com sucesso!')
-      fetchFinancialData()
+      
+      if (closingId) {
+        fetchClosingData(closingId)
+      } else {
+        fetchFinancialData()
+      }
     } catch (error) {
       console.error('Erro ao deletar entrada financeira:', error)
       message.error('Erro ao deletar entrada financeira')
@@ -355,80 +395,91 @@ export default function Closing() {
           <Col span={6}>
             <Title level={3} style={{ margin: 0 }}>
               <CalculatorOutlined style={{ marginRight: 8 }} />
-              Fechamento Financeiro
+              {closingData ? `Fechamento: ${closingData.name}` : 'Fechamento Financeiro'}
             </Title>
-          </Col>
-          <Col span={4}>
-            <Select
-              value={periodType}
-              onChange={handlePeriodChange}
-              style={{ width: '100%' }}
-              placeholder="Tipo de período"
-            >
-              <Option value="week">Semana</Option>
-              <Option value="biweekly">Quinzena</Option>
-              <Option value="month">Mês</Option>
-              <Option value="api-month">Mês (API)</Option>
-              <Option value="period">Período Personalizado</Option>
-            </Select>
-          </Col>
-          <Col span={6}>
-            {periodType === 'period' ? (
-              <RangePicker
-                style={{ width: '100%' }}
-                onChange={handleDateChange}
-                placeholder={['Data Início', 'Data Fim']}
-              />
-            ) : periodType === 'month' ? (
-              <DatePicker
-                picker="month"
-                style={{ width: '100%' }}
-                onChange={handleDateChange}
-                placeholder="Selecione o mês"
-              />
-            ) : periodType === 'api-month' ? (
-              <Select
-                style={{ width: '100%' }}
-                onChange={handleDateChange}
-                placeholder="Selecione o mês"
-                showSearch
-                optionFilterProp="children"
-              >
-                {months.map(month => (
-                  <Option key={month.id} value={month.id}>
-                    {month.name}
-                  </Option>
-                ))}
-              </Select>
-            ) : (
-              <DatePicker
-                picker={periodType === 'week' ? 'week' : 'date'}
-                onChange={handleDateChange}
-                placeholder={`Selecione a ${periodType === 'week' ? 'semana' : 'data'}`}
-              />
+            {closingData && (
+              <Text type="secondary">
+                Período: {dayjs(closingData.startDate).format('DD/MM/YYYY')} a {dayjs(closingData.endDate).format('DD/MM/YYYY')}
+              </Text>
             )}
           </Col>
-          <Col span={4}>
-            <Select
-              value={selectedCompany}
-              onChange={setSelectedCompany}
-              style={{ width: '100%' }}
-              placeholder="Empresa"
-              allowClear
-            >
-              {companies.map(company => (
-                <Option key={company.id} value={company.id}>
-                  {company.name}
-                </Option>
-              ))}
-            </Select>
-          </Col>
-          <Col span={4}>
+          {!closingData && (
+            <>
+              <Col span={4}>
+                <Select
+                  value={periodType}
+                  onChange={handlePeriodChange}
+                  style={{ width: '100%' }}
+                  placeholder="Tipo de período"
+                >
+                  <Option value="week">Semana</Option>
+                  <Option value="biweekly">Quinzena</Option>
+                  <Option value="month">Mês</Option>
+                  <Option value="api-month">Mês (API)</Option>
+                  <Option value="period">Período Personalizado</Option>
+                </Select>
+              </Col>
+              <Col span={6}>
+                {periodType === 'period' ? (
+                  <RangePicker
+                    style={{ width: '100%' }}
+                    onChange={handleDateChange}
+                    placeholder={['Data Início', 'Data Fim']}
+                  />
+                ) : periodType === 'month' ? (
+                  <DatePicker
+                    picker="month"
+                    style={{ width: '100%' }}
+                    onChange={handleDateChange}
+                    placeholder="Selecione o mês"
+                    format="MM/YYYY"
+                  />
+                ) : periodType === 'api-month' ? (
+                  <Select
+                    style={{ width: '100%' }}
+                    onChange={handleDateChange}
+                    placeholder="Selecione o mês"
+                    showSearch
+                    optionFilterProp="children"
+                  >
+                    {months.map(month => (
+                      <Option key={month.id} value={month.id}>
+                        {month.name}
+                      </Option>
+                    ))}
+                  </Select>
+                ) : (
+                  <DatePicker
+                    picker={periodType === 'week' ? 'week' : 'date'}
+                    onChange={handleDateChange}
+                    placeholder={`Selecione a ${periodType === 'week' ? 'semana' : 'data'}`}
+                    format="DD/MM/YYYY"
+                  />
+                )}
+              </Col>
+              <Col span={4}>
+                <Select
+                  value={selectedCompany}
+                  onChange={setSelectedCompany}
+                  style={{ width: '100%' }}
+                  placeholder="Empresa"
+                  allowClear
+                >
+                  {companies.map(company => (
+                    <Option key={company.id} value={company.id}>
+                      {company.name}
+                    </Option>
+                  ))}
+                </Select>
+              </Col>
+            </>
+          )}
+          <Col span={closingData ? 18 : 4}>
             <Button 
               type="primary" 
               icon={<PlusOutlined />}
               onClick={() => openModal('entrada')}
-              style={{ width: '100%' }}
+              style={{ width: closingData ? '200px' : '100%' }}
             >
               Nova Entrada
             </Button>

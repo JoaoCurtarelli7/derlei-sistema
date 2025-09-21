@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { Modal, Form, Input, Select, InputNumber, DatePicker } from 'antd'
+import { Modal, Form, Input, Select, InputNumber, DatePicker, message } from 'antd'
 import dayjs from 'dayjs'
 
 const { Option } = Select
@@ -68,17 +68,37 @@ export default function CustomModal({
       .then((values) => {
         const formattedValues = {
           description: values.description,
-          amount: parseFloat(values.amount) || 0,
+          amount: parseFloat(values.amount),
           category: values.category,
-          date: values.date.format('YYYY-MM-DD'),
+          date: values.date.format('DD/MM/YYYY'),
           type: type,
-          observations: values.observations,
+          observations: values.observations || null,
         }
+        
+        // Validar se o valor é válido
+        if (isNaN(formattedValues.amount) || formattedValues.amount <= 0) {
+          message.error('Valor deve ser maior que zero');
+          return;
+        }
+        
+        // Validar se a data é válida
+        if (!values.date || !values.date.isValid()) {
+          message.error('Data inválida');
+          return;
+        }
+        
         onSubmit(formattedValues)
         form.resetFields()
         onClose()
       })
-      .catch((info) => {})
+      .catch((info) => {
+        console.error('Erro na validação do formulário:', info)
+        if (info.message) {
+          message.error(info.message)
+        } else {
+          message.error('Erro na validação do formulário')
+        }
+      })
   }
 
   const handleCancel = () => {
@@ -148,7 +168,15 @@ export default function CustomModal({
           label={getFieldLabel(type, 'amount')}
           rules={[
             { required: true, message: 'Por favor, insira o valor.' },
-            { type: 'number', min: 0.01, message: 'O valor deve ser maior que zero.' }
+            { 
+              validator: (_, value) => {
+                const num = parseFloat(value);
+                if (isNaN(num) || num <= 0) {
+                  return Promise.reject(new Error('O valor deve ser maior que zero.'));
+                }
+                return Promise.resolve();
+              }
+            }
           ]}
         >
           <InputNumber
@@ -158,7 +186,10 @@ export default function CustomModal({
             step={0.01}
             precision={2}
             formatter={(value) => `R$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
-            parser={(value) => value.replace(/R\$\s?|(\.*)/g, '').replace(',', '.').replace(/\s/g, '')}
+            parser={(value) => {
+              const cleaned = value.replace(/R\$\s?|(\.*)/g, '').replace(',', '.').replace(/\s/g, '')
+              return cleaned === '' ? '0' : cleaned
+            }}
           />
         </Form.Item>
 

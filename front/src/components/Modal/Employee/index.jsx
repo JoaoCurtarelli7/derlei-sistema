@@ -56,7 +56,7 @@ export default function AddEmployeeModal({
         phone: values.telefone || '',
         email: values.email || '',
         address: values.endereco || '',
-        hireDate: values.dataContratacao ? values.dataContratacao.format('YYYY-MM-DD') : null,
+        hireDate: values.dataContratacao ? values.dataContratacao.format('DD/MM/YYYY') : null,
       }
 
       if (editingEmployee) {

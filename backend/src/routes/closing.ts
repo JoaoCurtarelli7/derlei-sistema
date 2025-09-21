@@ -11,14 +11,30 @@ export async function closingRoutes(app: FastifyInstance) {
     monthId: z.number(),
     companyId: z.number().optional(),
     name: z.string().min(1, "Nome do fechamento é obrigatório"),
-    startDate: z.string().transform((str) => new Date(str)),
-    endDate: z.string().transform((str) => new Date(str)),
+    startDate: z.string().transform((str) => {
+      // Converter DD/MM/YYYY para Date
+      const [day, month, year] = str.split('/');
+      return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    }),
+    endDate: z.string().transform((str) => {
+      // Converter DD/MM/YYYY para Date
+      const [day, month, year] = str.split('/');
+      return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    }),
   });
 
   const updateClosingSchema = z.object({
     name: z.string().min(1).optional(),
-    startDate: z.string().transform((str) => new Date(str)).optional(),
-    endDate: z.string().transform((str) => new Date(str)).optional(),
+    startDate: z.string().transform((str) => {
+      // Converter DD/MM/YYYY para Date
+      const [day, month, year] = str.split('/');
+      return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    }).optional(),
+    endDate: z.string().transform((str) => {
+      // Converter DD/MM/YYYY para Date
+      const [day, month, year] = str.split('/');
+      return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    }).optional(),
     status: z.enum(["aberto", "fechado", "cancelado"]).optional(),
   });
 
@@ -255,55 +271,70 @@ export async function closingRoutes(app: FastifyInstance) {
     try {
       const { id } = z.object({ id: z.coerce.number() }).parse(req.params);
 
-      const closing = await prisma.$queryRaw`
-        SELECT * FROM Closing WHERE id = ${id}
-      ` as any[];
+      const closing = await prisma.closing.findUnique({
+        where: { id },
+        include: {
+          entries: true,
+        },
+      });
 
-      if (closing.length === 0) {
+      if (!closing) {
         return rep.code(404).send({ message: "Fechamento não encontrado" });
       }
 
-      if (closing[0].status === 'fechado') {
+      if (closing.status === 'fechado') {
         return rep.code(400).send({ message: "Fechamento já está fechado" });
       }
 
-      // Calcular totais (simplificado para esta versão)
-      const totalEntries = 0;
-      const totalExpenses = 0;
-      const totalTaxes = 0;
-      const balance = 0;
-      const profitMargin = 0;
+      // Calcular totais reais
+      const totalEntries = closing.entries
+        .filter(e => e.type === 'entrada')
+        .reduce((sum, e) => sum + e.amount, 0);
+      
+      const totalExpenses = closing.entries
+        .filter(e => e.type === 'saida')
+        .reduce((sum, e) => sum + e.amount, 0);
+      
+      const totalTaxes = closing.entries
+        .filter(e => e.type === 'imposto')
+        .reduce((sum, e) => sum + e.amount, 0);
+      
+      const balance = totalEntries - totalExpenses - totalTaxes;
+      const profitMargin = totalEntries > 0 ? (balance / totalEntries) * 100 : 0;
 
       // Atualizar fechamento
-      await prisma.$queryRaw`
-        UPDATE Closing 
-        SET status = 'fechado', 
-            totalEntries = ${totalEntries},
-            totalExpenses = ${totalExpenses},
-            totalTaxes = ${totalTaxes},
-            balance = ${balance},
-            profitMargin = ${profitMargin},
-            updatedAt = datetime('now')
-        WHERE id = ${id}
-      `;
+      const updatedClosing = await prisma.closing.update({
+        where: { id },
+        data: {
+          status: 'fechado',
+          totalEntries,
+          totalExpenses,
+          totalTaxes,
+          balance,
+          profitMargin,
+        },
+        include: {
+          month: {
+            select: {
+              id: true,
+              name: true,
+              year: true,
+              month: true,
+            },
+          },
+          company: {
+            select: {
+              id: true,
+              name: true,
+              cnpj: true,
+            },
+          },
+        },
+      });
 
-      // Buscar fechamento atualizado
-      const updatedClosing = await prisma.$queryRaw`
-        SELECT 
-          c.*,
-          m.name as monthName,
-          m.year as monthYear,
-          m.month as monthNumber,
-          comp.name as companyName,
-          comp.cnpj as companyCnpj
-        FROM Closing c
-        LEFT JOIN Month m ON c.monthId = m.id
-        LEFT JOIN Company comp ON c.companyId = comp.id
-        WHERE c.id = ${id}
-      ` as any[];
-
-      return rep.send(updatedClosing[0] || {});
+      return rep.send(updatedClosing);
     } catch (error) {
+      console.error("Erro ao fechar fechamento:", error);
       return rep.code(500).send({ message: "Erro interno do servidor" });
     }
   });
@@ -347,6 +378,49 @@ export async function closingRoutes(app: FastifyInstance) {
 
       return rep.send(updatedClosing[0] || {});
     } catch (error) {
+      return rep.code(500).send({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Obter entradas financeiras de um fechamento
+  app.get("/closings/:id/entries", async (req, rep) => {
+    try {
+      const { id } = z.object({ id: z.coerce.number() }).parse(req.params);
+
+      const closing = await prisma.closing.findUnique({
+        where: { id },
+        include: {
+          entries: {
+            include: {
+              company: {
+                select: {
+                  id: true,
+                  name: true,
+                  cnpj: true,
+                },
+              },
+            },
+            orderBy: { date: 'desc' },
+          },
+        },
+      });
+
+      if (!closing) {
+        return rep.code(404).send({ message: "Fechamento não encontrado" });
+      }
+
+      return rep.send({
+        closing: {
+          id: closing.id,
+          name: closing.name,
+          status: closing.status,
+          startDate: closing.startDate,
+          endDate: closing.endDate,
+        },
+        entries: closing.entries,
+      });
+    } catch (error) {
+      console.error("Erro ao buscar entradas do fechamento:", error);
       return rep.code(500).send({ message: "Erro interno do servidor" });
     }
   });

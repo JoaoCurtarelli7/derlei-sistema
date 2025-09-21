@@ -9,14 +9,33 @@ export async function financialRoutes(app: FastifyInstance) {
 
   // Schema para validação de entrada financeira
   const createEntrySchema = z.object({
-    description: z.string().min(3, "Descrição deve ter pelo menos 3 caracteres"),
-    amount: z.number().positive("Valor deve ser maior que zero"),
-    category: z.string().min(1, "Categoria é obrigatória"),
-    date: z.string().transform((str) => new Date(str)),
-    companyId: z.number().optional(),
-    closingId: z.number().optional(),
-    type: z.enum(["entrada", "saida", "imposto"]),
-    observations: z.string().optional(),
+    description: z.string().min(3, "Descrição deve ter pelo menos 3 caracteres").max(255, "Descrição deve ter no máximo 255 caracteres"),
+    amount: z.union([z.number(), z.string()]).transform((val) => {
+      const num = typeof val === 'string' ? parseFloat(val) : val;
+      if (isNaN(num) || num <= 0) {
+        throw new Error("Valor deve ser maior que zero");
+      }
+      return num;
+    }),
+    category: z.string().min(1, "Categoria é obrigatória").max(100, "Categoria deve ter no máximo 100 caracteres"),
+    date: z.string().transform((str) => {
+      // Converter DD/MM/YYYY para Date
+      const [day, month, year] = str.split('/');
+      if (!day || !month || !year) {
+        throw new Error("Formato de data inválido. Use DD/MM/YYYY");
+      }
+      const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      if (isNaN(date.getTime())) {
+        throw new Error("Data inválida");
+      }
+      return date;
+    }),
+    companyId: z.number().optional().nullable(),
+    closingId: z.number().optional().nullable(),
+    type: z.enum(["entrada", "saida", "imposto"], {
+      errorMap: () => ({ message: "Tipo deve ser 'entrada', 'saida' ou 'imposto'" })
+    }),
+    observations: z.string().optional().nullable(),
   });
 
   // Schema para validação de período financeiro
@@ -48,6 +67,7 @@ export async function financialRoutes(app: FastifyInstance) {
           category: data.category,
           date: data.date,
           companyId: data.companyId,
+          closingId: data.closingId,
           type: data.type,
           observations: data.observations,
         },
@@ -65,6 +85,15 @@ export async function financialRoutes(app: FastifyInstance) {
       return rep.code(201).send(entry);
     } catch (error) {
       console.error("Erro ao criar entrada financeira:", error);
+      if (error instanceof z.ZodError) {
+        return rep.code(400).send({ 
+          message: "Dados inválidos",
+          errors: error.errors.map(err => ({
+            field: err.path.join('.'),
+            message: err.message
+          }))
+        });
+      }
       return rep.code(400).send({ 
         message: "Erro ao criar entrada financeira",
         error: error instanceof Error ? error.message : "Erro desconhecido"
@@ -170,6 +199,7 @@ export async function financialRoutes(app: FastifyInstance) {
           category: data.category,
           date: data.date,
           companyId: data.companyId,
+          closingId: data.closingId,
           type: data.type,
           observations: data.observations,
         },

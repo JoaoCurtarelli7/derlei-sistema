@@ -1,32 +1,32 @@
 import React, { useState, useEffect } from 'react'
 import {
-  Table,
-  Row,
-  Col,
-  Card,
-  Typography,
-  Button,
-  Space,
-  Tag,
-  message,
-  Popconfirm,
-  Modal,
-  Form,
-  Input,
-  InputNumber,
-  Select,
-  DatePicker,
-  Statistic, Alert,
-  Tabs
+    Table,
+    Row,
+    Col,
+    Card,
+    Typography,
+    Button,
+    Space,
+    Tag,
+    message,
+    Popconfirm,
+    Modal,
+    Form,
+    Input,
+    InputNumber,
+    Select,
+    DatePicker,
+    Statistic, Alert,
+    Tabs
 } from 'antd'
 import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined, CalculatorOutlined,
-  LockOutlined,
-  UnlockOutlined,
-  CalendarOutlined
+    PlusOutlined,
+    EditOutlined,
+    DeleteOutlined,
+    EyeOutlined, CalculatorOutlined,
+    LockOutlined,
+    UnlockOutlined,
+    CalendarOutlined
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import 'dayjs/locale/pt-br'
@@ -157,8 +157,8 @@ export default function Closings() {
       await api.post('/closings', {
         ...closingData,
         monthId: selectedMonth,
-        startDate: values.startDate.format('YYYY-MM-DD'),
-        endDate: values.endDate.format('YYYY-MM-DD')
+        startDate: values.startDate.format('DD/MM/YYYY'),
+        endDate: values.endDate.format('DD/MM/YYYY')
       })
       message.success('Fechamento criado com sucesso!')
       setIsModalOpen(false)
@@ -176,8 +176,8 @@ export default function Closings() {
       
       await api.put(`/closings/${editingClosing.id}`, {
         ...closingData,
-        startDate: values.startDate.format('YYYY-MM-DD'),
-        endDate: values.endDate.format('YYYY-MM-DD')
+        startDate: values.startDate.format('DD/MM/YYYY'),
+        endDate: values.endDate.format('DD/MM/YYYY')
       })
       message.success('Fechamento atualizado com sucesso!')
       setIsModalOpen(false)
@@ -426,7 +426,7 @@ export default function Closings() {
             type="text"
             icon={<EyeOutlined />}
             size="small"
-            onClick={() => window.open(`/financial-entries?closingId=${record.id}`, '_blank')}
+            onClick={() => window.open(`/closing?closingId=${record.id}`, '_blank')}
             title="Ver entradas financeiras"
           />
           <Button
@@ -734,6 +734,7 @@ export default function Closings() {
                       picker="month"
                       style={{ width: '100%' }}
                       placeholder="Selecione o mês"
+                      format="MM/YYYY"
                       onChange={(date) => {
                         if (date) {
                           const startDate = date.startOf('month')
@@ -761,6 +762,7 @@ export default function Closings() {
                       picker="month"
                       style={{ width: '100%' }}
                       placeholder="Selecione o mês"
+                      format="MM/YYYY"
                       onChange={(date) => {
                         if (date) {
                           const startDate = date.startOf('month')
@@ -788,6 +790,7 @@ export default function Closings() {
                       picker="month"
                       style={{ width: '100%' }}
                       placeholder="Selecione o mês"
+                      format="MM/YYYY"
                       onChange={(date) => {
                         if (date) {
                           const startDate = date.date(16)
@@ -815,6 +818,7 @@ export default function Closings() {
                       <DatePicker
                         style={{ width: '100%' }}
                         placeholder="Selecione a data início"
+                        format="DD/MM/YYYY"
                       />
                     </Form.Item>
 
@@ -826,6 +830,7 @@ export default function Closings() {
                       <DatePicker
                         style={{ width: '100%' }}
                         placeholder="Selecione a data fim"
+                        format="DD/MM/YYYY"
                       />
                     </Form.Item>
                   </>
