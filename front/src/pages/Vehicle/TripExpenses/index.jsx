@@ -1,36 +1,58 @@
 import { useEffect, useState } from 'react';
 import { Card, Button, Input, Form, Table, Typography, Space, message, Popconfirm } from 'antd';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { PlusOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { api } from '../../../lib';
 
 export default function TripExpenses() {
   const navigate = useNavigate();
   const { state } = useLocation(); // Dados da viagem selecionada
+  const params = useParams();
   const [expenses, setExpenses] = useState([]);
+  const [trip, setTrip] = useState(state || null);
   const [form] = Form.useForm();
 
-  const tripId = state?.id;
+  const tripId = state?.id || params?.id;
 
   // Carregar despesas da viagem
   const fetchExpenses = async () => {
     try {
       const response = await api.get(`/trips/${tripId}/expenses`);
-      setExpenses(response.data);
+      // backend responde { expenses }
+      setExpenses(response.data?.expenses || []);
     } catch (error) {
       console.error(error);
       message.error('Erro ao carregar despesas');
     }
   };
 
+  const fetchTrip = async () => {
+    try {
+      const response = await api.get(`/trips/${tripId}`);
+      setTrip(response.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   useEffect(() => {
-    if (tripId) fetchExpenses();
+    if (tripId) {
+      fetchExpenses();
+      fetchTrip();
+    }
   }, [tripId]);
 
   // Adicionar despesa
   const handleAddExpense = async (values) => {
     try {
-      const response = await api.post(`/trips/${tripId}/expenses`, values);
+      // Endpoint correto de criação é /expenses com tripId, date ISO e category
+      const payload = { 
+        ...values, 
+        tripId,
+        date: values?.date ? new Date(values.date).toISOString() : new Date().toISOString(),
+        category: values?.category || 'Outro'
+      };
+      const response = await api.post(`/expenses`, payload);
       setExpenses((prev) => [...prev, response.data]);
       form.resetFields();
       message.success('Despesa adicionada com sucesso!');
@@ -43,7 +65,8 @@ export default function TripExpenses() {
   // Deletar despesa
   const handleDeleteExpense = async (id) => {
     try {
-      await api.delete(`/trips/${tripId}/expenses/${id}`);
+      // Endpoint correto de exclusão é /expenses/:id
+      await api.delete(`/expenses/${id}`);
       setExpenses((prev) => prev.filter((exp) => exp.id !== id));
       message.success('Despesa removida com sucesso!');
     } catch (error) {
@@ -55,7 +78,7 @@ export default function TripExpenses() {
   const calculateTotal = () =>
     expenses.reduce((total, expense) => total + parseFloat(expense.amount), 0);
 
-  const freightValue = state?.freightValue || 0;
+  const freightValue = trip?.freightValue || 0;
   const totalExpenses = calculateTotal();
   const profit = freightValue - totalExpenses;
 
@@ -100,11 +123,11 @@ export default function TripExpenses() {
         Gastos da Viagem
       </Typography.Title>
       <Typography.Paragraph style={{ fontSize: 16, color: '#6c757d' }}>
-        <strong>Destino:</strong> {state?.destination}
+        <strong>Destino:</strong> {trip?.destination}
         <br />
-        <strong>Motorista:</strong> {state?.driver}
+        <strong>Motorista:</strong> {trip?.driver}
         <br />
-        <strong>Caminhão:</strong> {state?.truck}
+        <strong>Caminhão:</strong> {trip?.truck ? `${trip.truck.name} (${trip.truck.plate})` : '-'}
         <br />
         <strong>Valor do Frete:</strong>{' '}
         <Typography.Text strong style={{ color: '#28a745' }}>
@@ -130,6 +153,20 @@ export default function TripExpenses() {
           style={{ flex: 1 }}
         >
           <Input placeholder="Valor (R$)" />
+        </Form.Item>
+        <Form.Item
+          name="category"
+          rules={[{ required: true, message: 'Categoria obrigatória' }]}
+          style={{ flex: 1 }}
+        >
+          <Input placeholder="Categoria (ex: Combustível)" />
+        </Form.Item>
+        <Form.Item
+          name="date"
+          rules={[{ required: true, message: 'Data obrigatória' }]}
+          style={{ flex: 1 }}
+        >
+          <Input placeholder="Data (YYYY-MM-DD)" />
         </Form.Item>
         <Form.Item>
           <Button type="primary" htmlType="submit" icon={<PlusOutlined />}>

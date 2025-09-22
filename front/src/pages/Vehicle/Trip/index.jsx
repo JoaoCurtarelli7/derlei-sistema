@@ -3,7 +3,7 @@ import { Card, Button, Table, Typography, Space, Popconfirm, message } from 'ant
 import TripModal from '../../../components/Modal/Trip';
 import { PlusCircleOutlined } from '@ant-design/icons';
 import { FaTrash, FaDollarSign, FaEdit } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../../lib';
 import dayjs from 'dayjs';
 
@@ -11,6 +11,7 @@ const { Title } = Typography;
 
 export default function TripList() {
   const navigate = useNavigate();
+  const { id: truckId } = useParams();
   const [trips, setTrips] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentTrip, setCurrentTrip] = useState(null);
@@ -18,8 +19,11 @@ export default function TripList() {
   // Carregar todas as viagens
   const fetchTrips = async () => {
     try {
-      const response = await api.get('/trips');
-      setTrips(response.data);
+      const url = truckId ? `/trucks/${truckId}/trips` : '/trips';
+      const response = await api.get(url);
+      // aceita { trips } ou array direto
+      const list = Array.isArray(response.data) ? response.data : (response.data?.trips || []);
+      setTrips(list);
     } catch (error) {
       console.error(error);
       message.error('Erro ao carregar viagens');
@@ -28,12 +32,18 @@ export default function TripList() {
 
   useEffect(() => {
     fetchTrips();
-  }, []);
+  }, [truckId]);
 
   // Adicionar viagem
   const handleAddTrip = async (values) => {
     try {
-      const response = await api.post('/trips', values);
+      // garantir data ISO e associar ao caminhão quando filtrado por truckId
+      const payload = {
+        ...values,
+        date: values?.date?.toDate ? values.date.toDate().toISOString() : (values?.date ? new Date(values.date).toISOString() : undefined),
+        truckId: truckId ? Number(truckId) : undefined,
+      };
+      const response = await api.post('/trips', payload);
       setTrips((prev) => [...prev, response.data]);
       setIsModalVisible(false);
       message.success('Viagem adicionada com sucesso!');
@@ -51,7 +61,12 @@ export default function TripList() {
 
   const handleEditSubmit = async (values) => {
     try {
-      const response = await api.put(`/trips/${currentTrip.id}`, values);
+      const payload = {
+        ...values,
+        date: values?.date?.toDate ? values.date.toDate().toISOString() : (values?.date ? new Date(values.date).toISOString() : undefined),
+        truckId: truckId ? Number(truckId) : values?.truckId,
+      };
+      const response = await api.put(`/trips/${currentTrip.id}`, payload);
       setTrips((prev) =>
         prev.map((trip) => (trip.id === currentTrip.id ? response.data : trip))
       );
@@ -85,7 +100,12 @@ export default function TripList() {
       key: 'date',
       render: (date) => date ? dayjs(date).format('DD/MM/YYYY') : '-'
     },
-    { title: 'Caminhão', dataIndex: 'truck', key: 'truck' },
+    { 
+      title: 'Caminhão', 
+      dataIndex: 'truck', 
+      key: 'truck',
+      render: (truck) => (truck ? `${truck.name} (${truck.plate})` : '-')
+    },
     {
       title: 'Ações',
       key: 'actions',

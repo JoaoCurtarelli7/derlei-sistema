@@ -20,7 +20,7 @@ export default function VehicleMaintenanceList() {
       const response = await api.get(`/trucks/${id}/maintenances`);
       console.log('API response ->', response.data);
   
-      // pega direto a chave correta
+      // backend responde { maintenances }
       const arr = Array.isArray(response.data.maintenances)
         ? response.data.maintenances
         : [];
@@ -44,7 +44,15 @@ export default function VehicleMaintenanceList() {
   // Adicionar manutenção
   const handleAddMaintenance = async (values) => {
     try {
-      const response = await api.post(`/trucks/${id}/maintenances`, values);
+      // mapear campos para o backend: data->date, servico->service, valor->value
+      const payload = {
+        date: values?.data ? dayjs(values.data, 'DD/MM/YYYY').toDate().toISOString() : undefined,
+        service: values?.servico,
+        km: values?.km,
+        value: values?.valor,
+        notes: values?.observacao,
+      };
+      const response = await api.post(`/trucks/${id}/maintenances`, payload);
       setMaintenanceData((prev) => [...prev, response.data]);
       setIsModalVisible(false);
       message.success('Manutenção adicionada com sucesso!');
@@ -57,9 +65,17 @@ export default function VehicleMaintenanceList() {
   // Editar manutenção
   const handleEditMaintenance = async (values) => {
     try {
+      const payload = {
+        date: values?.data ? dayjs(values.data, 'DD/MM/YYYY').toDate().toISOString() : undefined,
+        service: values?.servico,
+        km: values?.km,
+        value: values?.valor,
+        notes: values?.observacao,
+      };
+      // backend de update é /maintenances/:id
       const response = await api.put(
-        `/trucks/${id}/maintenances/${editingMaintenance.id}`,
-        values
+        `/maintenances/${editingMaintenance.id}`,
+        payload
       );
       setMaintenanceData((prev) =>
         prev.map((item) =>
@@ -78,7 +94,8 @@ export default function VehicleMaintenanceList() {
   // Deletar manutenção
   const handleDelete = async (maintenanceId) => {
     try {
-      await api.delete(`/trucks/${id}/maintenances/${maintenanceId}`);
+      // backend de delete é /maintenances/:id
+      await api.delete(`/maintenances/${maintenanceId}`);
       setMaintenanceData((prev) =>
         prev.filter((item) => item.id !== maintenanceId)
       );
@@ -97,13 +114,13 @@ export default function VehicleMaintenanceList() {
   const columns = [
     { 
       title: 'Data', 
-      dataIndex: 'data', 
-      key: 'data',
+      dataIndex: 'date', 
+      key: 'date',
       render: (date) => date ? dayjs(date).format('DD/MM/YYYY') : '-'
     },
-    { title: 'Serviço Realizado', dataIndex: 'servico', key: 'servico' },
+    { title: 'Serviço Realizado', dataIndex: 'service', key: 'service' },
     { title: 'KM', dataIndex: 'km', key: 'km', align: 'right' },
-    { title: 'Valor (R$)', dataIndex: 'valor', key: 'valor', align: 'right' },
+    { title: 'Valor (R$)', dataIndex: 'value', key: 'value', align: 'right' },
     {
       title: 'Ações',
       key: 'actions',
@@ -135,16 +152,16 @@ export default function VehicleMaintenanceList() {
       </Button>
 
       <Table
-  dataSource={Array.isArray(maintenanceData) ? maintenanceData : []}
-  columns={columns}
-  rowKey="id"
-  pagination={{ pageSize: 5 }}
-  footer={() => (
-    <div style={{ textAlign: "right", fontWeight: "bold" }}>
-      Total Gasto: R$ {maintenanceData.reduce((acc, curr) => acc + (curr.valor || 0), 0).toFixed(2)}
-    </div>
-  )}
-/>
+        dataSource={Array.isArray(maintenanceData) ? maintenanceData : []}
+        columns={columns}
+        rowKey="id"
+        pagination={{ pageSize: 5 }}
+        footer={() => (
+          <div style={{ textAlign: "right", fontWeight: "bold" }}>
+            Total Gasto: R$ {maintenanceData.reduce((acc, curr) => acc + (curr.value || 0), 0).toFixed(2)}
+          </div>
+        )}
+      />
 
 
       <VehicleMaintenanceModal

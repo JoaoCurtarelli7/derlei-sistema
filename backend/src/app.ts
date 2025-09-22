@@ -23,6 +23,11 @@ const app = fastify({
 
 app.register(fastifyCors, {
   origin: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  exposedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+  maxAge: 86400,
 });
 
 app.register(companyRoutes);

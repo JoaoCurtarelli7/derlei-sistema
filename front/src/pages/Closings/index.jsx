@@ -426,9 +426,10 @@ export default function Closings() {
             type="text"
             icon={<EyeOutlined />}
             size="small"
-            onClick={() => window.open(`/closing?closingId=${record.id}`, '_blank')}
+            onClick={() => window.location.href = `/closing?closingId=${record.id}`}
             title="Ver entradas financeiras"
           />
+
           <Button
             type="text"
             icon={<EditOutlined />}
@@ -484,7 +485,7 @@ export default function Closings() {
       label: (
         <span>
           <CalendarOutlined />
-          Meses
+         {' '}Meses
         </span>
       ),
       children: (
@@ -529,7 +530,7 @@ export default function Closings() {
       label: (
         <span>
           <CalculatorOutlined />
-          Fechamentos
+          {' '}Fechamentos
         </span>
       ),
       children: (

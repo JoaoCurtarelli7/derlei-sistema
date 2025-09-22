@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'
-import { Modal, Form, Input, DatePicker, InputNumber } from 'antd'
+import { Modal, Form, Input, DatePicker, InputNumber, Select } from 'antd'
+import dayjs from 'dayjs'
 
 export default function TripModal({
   visible,
@@ -9,10 +10,17 @@ export default function TripModal({
 }) {
   const [form] = Form.useForm()
 
-  // Preenche os campos do modal com os dados da viagem ao editar
+  // Preenche os campos (inclui conversão de date e defaults)
   useEffect(() => {
     if (initialValues) {
-      form.setFieldsValue(initialValues)
+      form.setFieldsValue({
+        destination: initialValues.destination,
+        driver: initialValues.driver,
+        date: initialValues.date ? dayjs(initialValues.date) : null,
+        freightValue: initialValues.freightValue,
+        status: initialValues.status || 'em_andamento',
+        notes: initialValues.notes || ''
+      })
     }
   }, [initialValues, form])
 
@@ -37,7 +45,7 @@ export default function TripModal({
       okText="Salvar"
       cancelText="Cancelar"
     >
-      <Form form={form} layout="vertical">
+      <Form form={form} layout="vertical" style={{ paddingTop: 8 }}>
         <Form.Item
           label="Destino"
           name="destination"
@@ -85,6 +93,20 @@ export default function TripModal({
             }
             parser={(value) => value.replace(/[R$\s.]/g, '')}
           />
+        </Form.Item>
+
+        <Form.Item label="Status" name="status" initialValue="em_andamento">
+          <Select
+            options={[
+              { value: 'em_andamento', label: 'Em andamento' },
+              { value: 'concluida', label: 'Concluída' },
+              { value: 'cancelada', label: 'Cancelada' },
+            ]}
+          />
+        </Form.Item>
+
+        <Form.Item label="Observações" name="notes">
+          <Input.TextArea rows={3} placeholder="Observações da viagem" />
         </Form.Item>
       </Form>
     </Modal>

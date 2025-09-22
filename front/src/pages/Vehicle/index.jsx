@@ -189,7 +189,7 @@ export default function VehicleList() {
             <Button 
               type="text" 
               icon={<EyeOutlined />} 
-              onClick={() => navigate(`/vehicle/${record.id}`)}
+              onClick={() => navigate(`/vehicle-maintenance/${record.id}`)}
             />
           </Tooltip>
           <Tooltip title="Manutenção">

@@ -11,12 +11,15 @@ export default function VehicleMaintenanceModal({
 }) {
   const [form] = Form.useForm()
 
-  // Set form fields when editing
+  // Prefill form when editing mapping API -> form fields
   useEffect(() => {
     if (editingMaintenance) {
       form.setFieldsValue({
-        ...editingMaintenance,
-        data: editingMaintenance.data ? dayjs(editingMaintenance.data) : null
+        data: editingMaintenance.date ? dayjs(editingMaintenance.date) : null,
+        servico: editingMaintenance.service,
+        km: editingMaintenance.km,
+        valor: editingMaintenance.value,
+        observacao: editingMaintenance.notes || ''
       })
     }
   }, [editingMaintenance, form])
@@ -58,7 +61,7 @@ export default function VehicleMaintenanceModal({
         </Button>,
       ]}
     >
-      <Form form={form} layout="vertical" name="maintenanceForm">
+      <Form form={form} layout="vertical" name="maintenanceForm" style={{ paddingTop: 8 }}>
         <Form.Item
           name="data"
           label="Data"
@@ -85,14 +88,14 @@ export default function VehicleMaintenanceModal({
             },
           ]}
         >
-          <Input />
+          <Input placeholder="Ex: Troca de óleo e filtros" />
         </Form.Item>
         <Form.Item
           name="km"
           label="KM"
           rules={[{ required: true, message: 'Por favor, insira o KM' }]}
         >
-          <InputNumber style={{ width: '100%' }} min={0} step={1} />
+          <InputNumber style={{ width: '100%' }} min={0} step={1} placeholder="Ex: 120000" />
         </Form.Item>
         <Form.Item
           name="valor"
@@ -106,6 +109,9 @@ export default function VehicleMaintenanceModal({
             prefix="R$ "
             formatter={(value) => (value ? `R$ ${value}` : '')}
           />
+        </Form.Item>
+        <Form.Item name="observacao" label="Observação">
+          <Input.TextArea rows={3} placeholder="Observações adicionais" />
         </Form.Item>
       </Form>
     </Modal>
