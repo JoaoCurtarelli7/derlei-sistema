@@ -120,12 +120,6 @@ export default function AddVehicleModal({ visible, onCancel, onSave, vehicle }) 
           </Col>
         </Row>
 
-        <Form.Item 
-          name="image" 
-          label="URL da Imagem"
-        >
-          <Input placeholder="https://exemplo.com/imagem.jpg" />
-        </Form.Item>
       </Form>
     </Modal>
   );

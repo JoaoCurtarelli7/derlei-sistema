@@ -35,6 +35,13 @@ export default function AddEmployeeModal({
     }
   }
 
+  // Efeito para abrir modal quando editingEmployee muda
+  React.useEffect(() => {
+    if (editingEmployee) {
+      showModal()
+    }
+  }, [editingEmployee])
+
   // Fecha o modal e limpa o estado de edição
   const handleCancel = () => {
     setIsModalVisible(false)
@@ -104,7 +111,11 @@ export default function AddEmployeeModal({
 
   return (
     <div>
-      <Button type="primary" onClick={showModal} icon={<UserOutlined />}>
+      <Button 
+        type="primary" 
+        onClick={showModal} 
+        icon={<UserOutlined />}
+      >
         {editingEmployee ? 'Editar Funcionário' : 'Adicionar Funcionário'}
       </Button>
       <Modal

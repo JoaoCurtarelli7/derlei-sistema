@@ -242,7 +242,6 @@ export default function EmployeeList() {
         />
       </div>
 
-      {/* Filtros */}
       <Row gutter={16} style={{ marginBottom: '20px' }}>
         <Col span={8}>
           <Search

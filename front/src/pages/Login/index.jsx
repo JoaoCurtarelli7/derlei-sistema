@@ -154,7 +154,7 @@ export default function LoginAndRegister() {
         <div className="image-overlay">
           <div className="welcome-text">
             <Title level={1} className="welcome-title">
-              Bem-vindo ao DSistema
+              Bem-vindo à Solução Logística
             </Title>
             <Text className="welcome-subtitle">
               Gerencie seus veículos e operações de forma eficiente
@@ -174,7 +174,7 @@ export default function LoginAndRegister() {
             <div className="logo-container">
               <div className="logo-icon">🚛</div>
               <Title level={2} className="app-title">
-                Derlei Sistema
+                Solução Logística
               </Title>
             </div>
             <Text className="app-subtitle">

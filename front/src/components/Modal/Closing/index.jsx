@@ -93,7 +93,10 @@ export default function CustomModal({
       })
       .catch((info) => {
         console.error('Erro na validação do formulário:', info)
-        if (info.message) {
+        if (info.errorFields && info.errorFields.length > 0) {
+          const firstError = info.errorFields[0].errors[0]
+          message.error(firstError)
+        } else if (info.message) {
           message.error(info.message)
         } else {
           message.error('Erro na validação do formulário')
@@ -169,13 +172,9 @@ export default function CustomModal({
           rules={[
             { required: true, message: 'Por favor, insira o valor.' },
             { 
-              validator: (_, value) => {
-                const num = parseFloat(value);
-                if (isNaN(num) || num <= 0) {
-                  return Promise.reject(new Error('O valor deve ser maior que zero.'));
-                }
-                return Promise.resolve();
-              }
+              type: 'number',
+              min: 0.01,
+              message: 'O valor deve ser maior que zero.'
             }
           ]}
         >
@@ -189,6 +188,12 @@ export default function CustomModal({
             parser={(value) => {
               const cleaned = value.replace(/R\$\s?|(\.*)/g, '').replace(',', '.').replace(/\s/g, '')
               return cleaned === '' ? '0' : cleaned
+            }}
+            onChange={(value) => {
+              // Garantir que o valor seja um número válido
+              if (value && !isNaN(value)) {
+                form.setFieldsValue({ amount: value })
+              }
             }}
           />
         </Form.Item>

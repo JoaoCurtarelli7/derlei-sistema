@@ -42,6 +42,17 @@ export default function TripExpenses() {
     }
   }, [tripId]);
 
+  // Recarregar dados quando voltar da página de despesas
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Força recarregamento da listagem de viagens ao voltar
+      window.dispatchEvent(new CustomEvent('reloadTrips'));
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
+
   // Adicionar despesa
   const handleAddExpense = async (values) => {
     try {
@@ -207,7 +218,11 @@ export default function TripExpenses() {
 
       {/* Botão Voltar */}
       <Space style={{ marginTop: 20 }}>
-        <Button type="default" icon={<ArrowLeftOutlined />} onClick={() => navigate(-1)}>
+        <Button type="default" icon={<ArrowLeftOutlined />} onClick={() => {
+          // Disparar evento para recarregar viagens
+          window.dispatchEvent(new CustomEvent('reloadTrips'));
+          navigate(-1);
+        }}>
           Voltar
         </Button>
       </Space>

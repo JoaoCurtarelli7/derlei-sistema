@@ -56,12 +56,12 @@ export default function AppSidebar() {
         {
           key: '/load',
           icon: <ShoppingCartOutlined />,
-          label: <Link to="/load">Cargas</Link>
+          label: <Link to="/load">Cargas/Pedidos</Link>
         },
         {
           key: '/vehicle-maintenance',
           icon: <TruckOutlined />,
-          label: <Link to="/vehicle-maintenance">Manutenção</Link>
+          label: <Link to="/vehicle-maintenance">Frota</Link>
         }
       ]
     },
@@ -72,10 +72,11 @@ export default function AppSidebar() {
     }
   ]
 
+
   return (
     <div className="sidebar">
       <div className="sidebar-header">
-        <h2>🚛 Derlei Sistema</h2>
+        <h2>🚛 Solução Logística</h2>
         <p>Olá, {userContext?.name || 'Usuário'}</p>
       </div>
 

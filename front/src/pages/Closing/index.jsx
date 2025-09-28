@@ -181,11 +181,14 @@ export default function Closing() {
       setEditingEntry(null)
     } catch (error) {
       console.error('Erro ao salvar entrada financeira:', error)
+      
       if (error.response?.data?.errors) {
         const errorMessages = error.response.data.errors.map(err => err.message).join(', ')
         message.error(`Erro de validação: ${errorMessages}`)
+      } else if (error.response?.data?.message) {
+        message.error(error.response.data.message)
       } else {
-        message.error(error.response?.data?.message || 'Erro ao salvar entrada financeira')
+        message.error('Erro ao salvar entrada financeira')
       }
     }
   }

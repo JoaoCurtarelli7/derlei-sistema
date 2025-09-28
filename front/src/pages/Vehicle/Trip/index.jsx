@@ -34,6 +34,16 @@ export default function TripList() {
     fetchTrips();
   }, [truckId]);
 
+  // Escutar evento de recarregamento quando voltar das despesas
+  useEffect(() => {
+    const handleReloadTrips = () => {
+      fetchTrips();
+    };
+    
+    window.addEventListener('reloadTrips', handleReloadTrips);
+    return () => window.removeEventListener('reloadTrips', handleReloadTrips);
+  }, []);
+
   // Adicionar viagem
   const handleAddTrip = async (values) => {
     try {
@@ -82,12 +92,23 @@ export default function TripList() {
   // Deletar viagem
   const handleDeleteTrip = async (id) => {
     try {
+      // Verificar se a viagem tem despesas antes de deletar
+      const trip = trips.find(t => t.id === id);
+      if (trip && trip.expenses && trip.expenses.length > 0) {
+        message.error('Não é possível deletar uma viagem que possui despesas vinculadas. Remova as despesas primeiro.');
+        return;
+      }
+      
       await api.delete(`/trips/${id}`);
       setTrips((prev) => prev.filter((trip) => trip.id !== id));
       message.success('Viagem removida com sucesso!');
     } catch (error) {
       console.error(error);
-      message.error('Erro ao remover viagem');
+      if (error.response?.data?.message) {
+        message.error(error.response.data.message);
+      } else {
+        message.error('Erro ao remover viagem');
+      }
     }
   };
 
@@ -105,6 +126,13 @@ export default function TripList() {
       dataIndex: 'truck', 
       key: 'truck',
       render: (truck) => (truck ? `${truck.name} (${truck.plate})` : '-')
+    },
+    { 
+      title: 'Valor do Frete', 
+      dataIndex: 'freightValue', 
+      key: 'freightValue',
+      render: (value) => value ? `R$ ${value.toFixed(2).replace('.', ',')}` : '-',
+      align: 'right'
     },
     {
       title: 'Ações',

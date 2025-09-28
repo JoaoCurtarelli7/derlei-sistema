@@ -1,12 +1,56 @@
 import jsPDF from 'jspdf'
 import 'jspdf-autotable'
+
+// Verificar se jsPDF está disponível
+if (typeof window !== 'undefined' && !window.jsPDF) {
+  console.warn('jsPDF não está disponível no window')
+}
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
 import dayjs from 'dayjs'
 
+// Função para extrair valor de dados aninhados
+const getNestedValue = (obj, path) => {
+  if (typeof path === 'string') {
+    return obj[path] || ''
+  }
+  if (Array.isArray(path)) {
+    return path.reduce((current, key) => {
+      return current && current[key] ? current[key] : ''
+    }, obj) || ''
+  }
+  return ''
+}
+
+// Função para formatar valor monetário
+const formatCurrency = (value) => {
+  try {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value || 0)
+  } catch (error) {
+    return 'R$ 0,00'
+  }
+}
+
+// Função para formatar data
+const formatDate = (date) => {
+  try {
+    return date ? dayjs(date).format('DD/MM/YYYY') : 'N/A'
+  } catch (error) {
+    return 'N/A'
+  }
+}
+
 // Função para exportar relatório em PDF
 export const exportToPDF = (data, columns, title, filename) => {
   try {
+    // Verificar se jsPDF está disponível
+    if (typeof jsPDF === 'undefined') {
+      throw new Error('jsPDF não está disponível. Verifique se a biblioteca está instalada.')
+    }
+    
     const doc = new jsPDF()
     
     // Cabeçalho do documento
@@ -27,20 +71,24 @@ export const exportToPDF = (data, columns, title, filename) => {
       const tableData = data.map(item => {
         return columns.map(col => {
           try {
-            if (col.render && typeof col.render === 'function') {
-              // Para colunas com render customizado, extrair o valor
-              const element = col.render(item[col.dataIndex], item)
-              if (typeof element === 'string') {
-                return element
-              } else if (element && element.props && element.props.children) {
-                return element.props.children
-              }
-              return item[col.dataIndex] || ''
+            // Extrair valor baseado no dataIndex
+            let value = getNestedValue(item, col.dataIndex)
+            
+            // Aplicar formatação específica baseada no título da coluna
+            if (col.title.includes('Valor') || col.title.includes('Salário') || col.title.includes('Custo') || col.title.includes('Total')) {
+              value = formatCurrency(value)
+            } else if (col.title.includes('Data')) {
+              value = formatDate(value)
+            } else if (col.title.includes('Status')) {
+              value = value || 'N/A'
+            } else if (col.title.includes('Peso')) {
+              value = `${value || 0} kg`
             }
-            return item[col.dataIndex] || ''
+            
+            return value || ''
           } catch (error) {
             console.warn('Erro ao processar coluna:', col.title, error)
-            return item[col.dataIndex] || ''
+            return ''
           }
         })
       })
@@ -71,14 +119,18 @@ export const exportToPDF = (data, columns, title, filename) => {
     // Rodapé
     const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 60
     doc.setFontSize(8)
-    doc.text('Sistema Derlei - Relatórios', 14, finalY)
+    doc.text('Solução Logística - Relatórios', 14, finalY)
     doc.text(`Página ${doc.internal.getNumberOfPages()}`, 180, finalY)
     
     // Salvar arquivo
-    doc.save(`${filename}_${dayjs().format('YYYY-MM-DD_HH-mm')}.pdf`)
+    const fileName = `${filename}_${dayjs().format('YYYY-MM-DD_HH-mm')}.pdf`
+    console.log('Salvando PDF:', fileName)
+    doc.save(fileName)
+    console.log('PDF salvo com sucesso!')
   } catch (error) {
     console.error('Erro ao gerar PDF:', error)
-    throw new Error('Erro ao gerar arquivo PDF')
+    console.error('Stack trace:', error.stack)
+    throw new Error(`Erro ao gerar arquivo PDF: ${error.message}`)
   }
 }
 
@@ -112,22 +164,24 @@ export const exportToExcel = (data, columns, title, filename) => {
       const row = {}
       columns.forEach(col => {
         try {
-          if (col.render && typeof col.render === 'function') {
-            // Para colunas com render customizado, extrair o valor
-            const element = col.render(item[col.dataIndex], item)
-            if (typeof element === 'string') {
-              row[col.title] = element
-            } else if (element && element.props && element.props.children) {
-              row[col.title] = element.props.children
-            } else {
-              row[col.title] = item[col.dataIndex] || ''
-            }
-          } else {
-            row[col.title] = item[col.dataIndex] || ''
+          // Extrair valor baseado no dataIndex
+          let value = getNestedValue(item, col.dataIndex)
+          
+          // Aplicar formatação específica baseada no título da coluna
+          if (col.title.includes('Valor') || col.title.includes('Salário') || col.title.includes('Custo') || col.title.includes('Total')) {
+            value = formatCurrency(value)
+          } else if (col.title.includes('Data')) {
+            value = formatDate(value)
+          } else if (col.title.includes('Status')) {
+            value = value || 'N/A'
+          } else if (col.title.includes('Peso')) {
+            value = `${value || 0} kg`
           }
+          
+          row[col.title] = value || ''
         } catch (error) {
           console.warn('Erro ao processar coluna:', col.title, error)
-          row[col.title] = item[col.dataIndex] || ''
+          row[col.title] = ''
         }
       })
       return row
@@ -227,18 +281,12 @@ export const exportCompanyReport = (data, format) => {
 // Função para exportar relatório de cargas
 export const exportLoadsReport = (data, format) => {
   const columns = [
-    { title: 'Descrição', dataIndex: 'description' },
+    { title: 'Número da Carga', dataIndex: 'loadingNumber' },
     { title: 'Empresa', dataIndex: ['company', 'name'] },
-    { title: 'Caminhão', dataIndex: ['truck', 'plate'] },
-    { title: 'Status', dataIndex: 'status',
-      render: (status) => status },
-    { title: 'Valor', dataIndex: 'value',
-      render: (value) => new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL'
-      }).format(value || 0) },
-    { title: 'Data Criação', dataIndex: 'createdAt',
-      render: (date) => dayjs(date).format('DD/MM/YYYY') }
+    { title: 'Entregas', dataIndex: 'deliveries' },
+    { title: 'Peso (kg)', dataIndex: 'cargoWeight' },
+    { title: 'Valor Total', dataIndex: 'totalValue' },
+    { title: 'Data', dataIndex: 'date' }
   ]
   
   if (format === 'pdf') {
@@ -251,16 +299,11 @@ export const exportLoadsReport = (data, format) => {
 // Função para exportar relatório de manutenções
 export const exportMaintenanceReport = (data, format) => {
   const columns = [
-    { title: 'Descrição', dataIndex: 'description' },
+    { title: 'Serviço', dataIndex: 'service' },
     { title: 'Caminhão', dataIndex: ['truck', 'plate'] },
-    { title: 'Data', dataIndex: 'date',
-      render: (date) => dayjs(date).format('DD/MM/YYYY') },
-    { title: 'Valor', dataIndex: 'value',
-      render: (value) => new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL'
-      }).format(value || 0) },
-    { title: 'Tipo', dataIndex: 'type' }
+    { title: 'Data', dataIndex: 'date' },
+    { title: 'Valor', dataIndex: 'value' },
+    { title: 'KM', dataIndex: 'km' }
   ]
   
   if (format === 'pdf') {
@@ -273,15 +316,9 @@ export const exportMaintenanceReport = (data, format) => {
 // Função para exportar relatório financeiro
 export const exportFinancialReport = (data, format) => {
   const columns = [
-    { title: 'Data', dataIndex: 'date',
-      render: (date) => dayjs(date).format('DD/MM/YYYY') },
-    { title: 'Tipo', dataIndex: 'type',
-      render: (type) => type },
-    { title: 'Valor', dataIndex: 'amount',
-      render: (value) => new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL'
-      }).format(value || 0) },
+    { title: 'Data', dataIndex: 'date' },
+    { title: 'Tipo', dataIndex: 'type' },
+    { title: 'Valor', dataIndex: 'amount' },
     { title: 'Funcionário', dataIndex: ['employee', 'name'] },
     { title: 'Descrição', dataIndex: 'description' }
   ]
@@ -296,14 +333,11 @@ export const exportFinancialReport = (data, format) => {
 // Função para exportar relatório de viagens
 export const exportTripsReport = (data, format) => {
   const columns = [
-    { title: 'Origem', dataIndex: 'origin' },
     { title: 'Destino', dataIndex: 'destination' },
+    { title: 'Motorista', dataIndex: 'driver' },
     { title: 'Caminhão', dataIndex: ['truck', 'plate'] },
-    { title: 'Motorista', dataIndex: ['driver', 'name'] },
-    { title: 'Status', dataIndex: 'status',
-      render: (status) => status },
-    { title: 'Data Início', dataIndex: 'startDate',
-      render: (date) => dayjs(date).format('DD/MM/YYYY') }
+    { title: 'Status', dataIndex: 'status' },
+    { title: 'Data', dataIndex: 'date' }
   ]
   
   if (format === 'pdf') {

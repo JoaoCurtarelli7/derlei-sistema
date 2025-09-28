@@ -295,12 +295,18 @@ export default function Reports() {
       }
       
       if (exportFunction) {
-        exportFunction(data, format)
-        message.destroy()
-        if (data.length === 0) {
-          message.info(`Relatório ${reportType} exportado em ${format.toUpperCase()} (sem dados).`)
-        } else {
-          message.success(`Relatório ${reportType} exportado em ${format.toUpperCase()} com sucesso! ${data.length} registros.`)
+        try {
+          exportFunction(data, format)
+          message.destroy()
+          if (data.length === 0) {
+            message.info(`Relatório ${reportType} exportado em ${format.toUpperCase()} (sem dados).`)
+          } else {
+            message.success(`Relatório ${reportType} exportado em ${format.toUpperCase()} com sucesso! ${data.length} registros.`)
+          }
+        } catch (exportError) {
+          message.destroy()
+          console.error('Erro na função de exportação:', exportError)
+          message.error(`Erro ao gerar ${format.toUpperCase()}: ${exportError.message || 'Erro desconhecido'}`)
         }
       }
     } catch (error) {
@@ -318,7 +324,13 @@ export default function Reports() {
   }
 
   const formatDate = (date) => {
+    if (!date) return 'N/A'
     return dayjs(date).format('DD/MM/YYYY')
+  }
+
+  const formatDateTime = (date) => {
+    if (!date) return 'N/A'
+    return dayjs(date).format('DD/MM/YYYY HH:mm')
   }
 
   // Colunas para tabelas de relatórios
@@ -346,25 +358,25 @@ export default function Reports() {
   ]
 
   const loadsColumns = [
-    { title: 'Descrição', dataIndex: 'description', key: 'description' },
+    { title: 'Número da Carga', dataIndex: 'loadingNumber', key: 'loadingNumber' },
     { title: 'Empresa', dataIndex: ['company', 'name'], key: 'company' },
-    { title: 'Caminhão', dataIndex: ['truck', 'plate'], key: 'truck' },
-    { title: 'Status', dataIndex: 'status', key: 'status',
-      render: (status) => <Tag color={status === 'Ativo' ? 'green' : 'orange'}>{status}</Tag> },
-    { title: 'Valor', dataIndex: 'value', key: 'value',
+    { title: 'Entregas', dataIndex: 'deliveries', key: 'deliveries' },
+    { title: 'Peso (kg)', dataIndex: 'cargoWeight', key: 'cargoWeight',
+      render: (weight) => `${weight || 0} kg` },
+    { title: 'Valor Total', dataIndex: 'totalValue', key: 'totalValue',
       render: (value) => formatCurrency(value) },
-    { title: 'Data Criação', dataIndex: 'createdAt', key: 'createdAt',
+    { title: 'Data', dataIndex: 'date', key: 'date',
       render: (date) => formatDate(date) }
   ]
 
   const maintenanceColumns = [
-    { title: 'Descrição', dataIndex: 'description', key: 'description' },
+    { title: 'Serviço', dataIndex: 'service', key: 'service' },
     { title: 'Caminhão', dataIndex: ['truck', 'plate'], key: 'truck' },
     { title: 'Data', dataIndex: 'date', key: 'date',
       render: (date) => formatDate(date) },
     { title: 'Valor', dataIndex: 'value', key: 'value',
       render: (value) => formatCurrency(value) },
-    { title: 'Tipo', dataIndex: 'type', key: 'type' }
+    { title: 'KM', dataIndex: 'km', key: 'km' }
   ]
 
   const financialColumns = [
@@ -379,13 +391,12 @@ export default function Reports() {
   ]
 
   const tripsColumns = [
-    { title: 'Origem', dataIndex: 'origin', key: 'origin' },
     { title: 'Destino', dataIndex: 'destination', key: 'destination' },
+    { title: 'Motorista', dataIndex: 'driver', key: 'driver' },
     { title: 'Caminhão', dataIndex: ['truck', 'plate'], key: 'truck' },
-    { title: 'Motorista', dataIndex: ['driver', 'name'], key: 'driver' },
     { title: 'Status', dataIndex: 'status', key: 'status',
       render: (status) => <Tag color={status === 'Concluída' ? 'green' : 'orange'}>{status}</Tag> },
-    { title: 'Data Início', dataIndex: 'startDate', key: 'startDate',
+    { title: 'Data', dataIndex: 'date', key: 'date',
       render: (date) => formatDate(date) }
   ]
 
@@ -1037,7 +1048,7 @@ export default function Reports() {
       {/* Rodapé */}
       <div style={{ textAlign: 'center', marginTop: '32px', padding: '16px' }}>
         <Text type="secondary">
-          Sistema de Relatórios - Última atualização: {dayjs().format('DD/MM/YYYY HH:mm')}
+          Sistema de Relatórios - Última atualização: {formatDateTime(new Date())}
         </Text>
       </div>
     </div>

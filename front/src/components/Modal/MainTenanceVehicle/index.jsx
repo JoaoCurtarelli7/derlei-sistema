@@ -106,8 +106,9 @@ export default function VehicleMaintenanceModal({
             style={{ width: '100%' }}
             min={0}
             step={0.01}
-            prefix="R$ "
-            formatter={(value) => (value ? `R$ ${value}` : '')}
+            precision={2}
+            formatter={(value) => `R$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+            parser={(value) => value.replace(/R\$\s?|(\.*)/g, '').replace(',', '.')}
           />
         </Form.Item>
         <Form.Item name="observacao" label="Observação">
