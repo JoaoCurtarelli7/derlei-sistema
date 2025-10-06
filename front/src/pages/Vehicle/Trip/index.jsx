@@ -24,9 +24,24 @@ export default function TripList() {
       // aceita { trips } ou array direto
       const list = Array.isArray(response.data) ? response.data : (response.data?.trips || []);
       setTrips(list);
+      // Salvar dados no localStorage para backup
+      localStorage.setItem('tripsData', JSON.stringify(list));
     } catch (error) {
       console.error(error);
-      message.error('Erro ao carregar viagens');
+      // Tentar restaurar dados do localStorage em caso de erro
+      const savedData = localStorage.getItem('tripsData');
+      if (savedData) {
+        try {
+          const parsedData = JSON.parse(savedData);
+          setTrips(parsedData);
+          message.warning('Dados carregados do cache devido a erro na conexão');
+        } catch (parseError) {
+          console.error('Erro ao parsear dados salvos:', parseError);
+          message.error('Erro ao carregar viagens');
+        }
+      } else {
+        message.error('Erro ao carregar viagens');
+      }
     }
   };
 
@@ -42,6 +57,27 @@ export default function TripList() {
     
     window.addEventListener('reloadTrips', handleReloadTrips);
     return () => window.removeEventListener('reloadTrips', handleReloadTrips);
+  }, []);
+
+  // Recarregar dados quando a janela ganha foco (volta de outra tela)
+  useEffect(() => {
+    const handleFocus = () => {
+      fetchTrips();
+    };
+    
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchTrips();
+      }
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   // Adicionar viagem
@@ -141,9 +177,11 @@ export default function TripList() {
         <>
           <FaDollarSign
             style={{ cursor: 'pointer', marginRight: 10 }}
-            onClick={() =>
-              navigate(`/vehicle/trip-expenses/${record.id}`, { state: record })
-            }
+            onClick={() => {
+              // Salvar dados atuais antes de navegar
+              localStorage.setItem('tripsData', JSON.stringify(trips));
+              navigate(`/vehicle/trip-expenses/${record.id}`, { state: record });
+            }}
           />
           <FaEdit
             style={{ cursor: 'pointer', marginRight: 10 }}

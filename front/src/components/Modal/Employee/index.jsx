@@ -63,7 +63,7 @@ export default function AddEmployeeModal({
         phone: values.telefone || '',
         email: values.email || '',
         address: values.endereco || '',
-        hireDate: values.dataContratacao ? values.dataContratacao.format('DD/MM/YYYY') : null,
+        hireDate: values.dataContratacao ? values.dataContratacao.format('YYYY-MM-DD') : null,
       }
 
       if (editingEmployee) {
@@ -81,7 +81,10 @@ export default function AddEmployeeModal({
       form.resetFields()
     } catch (error) {
       console.error('Erro ao salvar funcionário:', error)
-      if (error.response?.data?.message) {
+      if (error.response?.data?.errors) {
+        const errorMessages = error.response.data.errors.map(err => err.message).join(', ')
+        message.error(`Erro de validação: ${errorMessages}`)
+      } else if (error.response?.data?.message) {
         message.error(error.response.data.message)
       } else {
         message.error('Erro ao salvar funcionário. Tente novamente.')
@@ -259,8 +262,19 @@ export default function AddEmployeeModal({
                 <InputNumber
                   style={{ width: '100%' }}
                   min={0}
-                  formatter={(value) => `R$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
-                  parser={(value) => value.replace(/R\$\s?|(\.*)/g, '').replace(',', '.')}
+                  precision={2}
+                  formatter={(value) => {
+                    const val = Number.parseFloat(value)
+                    return isNaN(val) ? 'R$ 0,00' : val?.toLocaleString('pt-BR', {
+                      style: 'currency',
+                      minimumFractionDigits: 2,
+                      currency: 'BRL'
+                    })
+                  }}
+                  parser={(value) => {
+                    const cleaned = value.replace(/[R$\s.]/g, '').replace(',', '.')
+                    return cleaned === '' ? 0 : cleaned
+                  }}
                   placeholder="0,00"
                 />
               </Form.Item>

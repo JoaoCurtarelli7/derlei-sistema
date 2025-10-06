@@ -17,7 +17,15 @@ export async function employeeRoutes(app: FastifyInstance) {
     phone: z.string().optional(),
     email: z.string().email("Email inválido").optional().or(z.literal("")),
     address: z.string().optional(),
-    hireDate: z.string().optional(),
+    hireDate: z.string().optional().transform((str) => {
+      if (!str) return null;
+      // Aceitar tanto DD/MM/YYYY quanto YYYY-MM-DD
+      if (str.includes('/')) {
+        const [day, month, year] = str.split('/');
+        return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      }
+      return new Date(str);
+    }),
   });
 
   app.addHook("preHandler", authenticate);
@@ -95,7 +103,7 @@ export async function employeeRoutes(app: FastifyInstance) {
       }
 
       // Converter data de contratação se fornecida
-      const hireDate = data.hireDate ? new Date(data.hireDate) : new Date();
+      const hireDate = data.hireDate || new Date();
 
       const employee = await prisma.employee.create({
         data: {
@@ -114,10 +122,22 @@ export async function employeeRoutes(app: FastifyInstance) {
       return rep.code(201).send(employee);
     } catch (error) {
       console.error("Erro ao criar funcionário:", error);
+      if (error instanceof z.ZodError) {
+        return rep.code(400).send({ 
+          message: "Dados inválidos",
+          errors: error.errors.map(err => ({
+            field: err.path.join('.'),
+            message: err.message
+          }))
+        });
+      }
       if (error.code === "P2002") {
         return rep.code(400).send({ message: "CPF já cadastrado" });
       }
-      return rep.code(500).send({ message: "Erro interno do servidor" });
+      return rep.code(500).send({ 
+        message: "Erro interno do servidor",
+        error: error instanceof Error ? error.message : "Erro desconhecido"
+      });
     }
   });
 
@@ -147,7 +167,7 @@ export async function employeeRoutes(app: FastifyInstance) {
       }
 
       // Converter data de contratação se fornecida
-      const hireDate = data.hireDate ? new Date(data.hireDate) : existingEmployee.hireDate;
+      const hireDate = data.hireDate || existingEmployee.hireDate;
 
       const updatedEmployee = await prisma.employee.update({
         where: { id },
@@ -167,10 +187,22 @@ export async function employeeRoutes(app: FastifyInstance) {
       return rep.send(updatedEmployee);
     } catch (error) {
       console.error("Erro ao atualizar funcionário:", error);
+      if (error instanceof z.ZodError) {
+        return rep.code(400).send({ 
+          message: "Dados inválidos",
+          errors: error.errors.map(err => ({
+            field: err.path.join('.'),
+            message: err.message
+          }))
+        });
+      }
       if (error.code === "P2002") {
         return rep.code(400).send({ message: "CPF já cadastrado" });
       }
-      return rep.code(500).send({ message: "Erro interno do servidor" });
+      return rep.code(500).send({ 
+        message: "Erro interno do servidor",
+        error: error instanceof Error ? error.message : "Erro desconhecido"
+      });
     }
   });
 

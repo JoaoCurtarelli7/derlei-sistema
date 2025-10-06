@@ -81,6 +81,13 @@ export async function tripRoutes(app: FastifyInstance) {
         include: { 
           expenses: {
             orderBy: { date: 'desc' }
+          },
+          truck: {
+            select: {
+              id: true,
+              name: true,
+              plate: true
+            }
           }
         },
         orderBy: { date: 'desc' }

@@ -212,17 +212,15 @@ export default function CustomModal({
           />
         </Form.Item>
 
-        {type === 'saida' && (
-          <Form.Item
-            name="observations"
-            label="Observações"
-          >
-            <Input.TextArea 
-              rows={3} 
-              placeholder="Observações adicionais sobre a despesa..."
-            />
-          </Form.Item>
-        )}
+        <Form.Item
+          name="observations"
+          label="Observações"
+        >
+          <Input.TextArea 
+            rows={3} 
+            placeholder={`Observações adicionais sobre a ${type === 'entrada' ? 'entrada' : type === 'saida' ? 'despesa' : 'imposto'}...`}
+          />
+        </Form.Item>
       </Form>
     </Modal>
   )

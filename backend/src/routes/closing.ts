@@ -11,12 +11,14 @@ export async function closingRoutes(app: FastifyInstance) {
     monthId: z.number(),
     companyId: z.number().optional(),
     name: z.string().min(1, "Nome do fechamento é obrigatório"),
-    startDate: z.string().transform((str) => {
+    startDate: z.string().nullable().optional().transform((str) => {
+      if (!str) return null;
       // Converter DD/MM/YYYY para Date
       const [day, month, year] = str.split('/');
       return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
     }),
-    endDate: z.string().transform((str) => {
+    endDate: z.string().nullable().optional().transform((str) => {
+      if (!str) return null;
       // Converter DD/MM/YYYY para Date
       const [day, month, year] = str.split('/');
       return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
@@ -25,12 +27,14 @@ export async function closingRoutes(app: FastifyInstance) {
 
   const updateClosingSchema = z.object({
     name: z.string().min(1).optional(),
-    startDate: z.string().transform((str) => {
+    startDate: z.string().nullable().transform((str) => {
+      if (!str) return null;
       // Converter DD/MM/YYYY para Date
       const [day, month, year] = str.split('/');
       return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
     }).optional(),
-    endDate: z.string().transform((str) => {
+    endDate: z.string().nullable().transform((str) => {
+      if (!str) return null;
       // Converter DD/MM/YYYY para Date
       const [day, month, year] = str.split('/');
       return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
@@ -166,32 +170,44 @@ export async function closingRoutes(app: FastifyInstance) {
         }
       }
 
-      // Criar fechamento
-      await prisma.$queryRaw`
-        INSERT INTO Closing (monthId, companyId, name, startDate, endDate, status, createdAt, updatedAt)
-        VALUES (${data.monthId}, ${data.companyId || null}, ${data.name}, ${data.startDate}, ${data.endDate}, 'aberto', datetime('now'), datetime('now'))
-      `;
+      // Criar fechamento usando Prisma ORM em vez de SQL bruto
+      const closingData = {
+        monthId: data.monthId,
+        companyId: data.companyId || null,
+        name: data.name,
+        status: 'aberto',
+        startDate: data.startDate || null,
+        endDate: data.endDate || null,
+      };
+      
+      const newClosing = await prisma.closing.create({
+        data: closingData,
+        include: {
+          month: {
+            select: {
+              id: true,
+              name: true,
+              year: true,
+              month: true,
+            },
+          },
+          company: {
+            select: {
+              id: true,
+              name: true,
+              cnpj: true,
+            },
+          },
+        },
+      });
 
-      // Buscar o fechamento criado
-      const newClosing = await prisma.$queryRaw`
-        SELECT 
-          c.*,
-          m.name as monthName,
-          m.year as monthYear,
-          m.month as monthNumber,
-          comp.name as companyName,
-          comp.cnpj as companyCnpj
-        FROM Closing c
-        LEFT JOIN Month m ON c.monthId = m.id
-        LEFT JOIN Company comp ON c.companyId = comp.id
-        WHERE c.monthId = ${data.monthId} AND c.name = ${data.name}
-        ORDER BY c.createdAt DESC
-        LIMIT 1
-      ` as any[];
-
-      return rep.code(201).send(newClosing[0] || {});
+      return rep.code(201).send(newClosing);
     } catch (error) {
-      return rep.code(500).send({ message: "Erro interno do servidor" });
+      console.error("Erro ao criar fechamento:", error);
+      return rep.code(500).send({ 
+        message: "Erro interno do servidor",
+        error: error instanceof Error ? error.message : "Erro desconhecido"
+      });
     }
   });
 
@@ -201,38 +217,41 @@ export async function closingRoutes(app: FastifyInstance) {
       const { id } = z.object({ id: z.coerce.number() }).parse(req.params);
       const data = updateClosingSchema.parse(req.body);
 
-      // Atualizar fechamento
-      const updateFields = [];
-      if (data.name) updateFields.push(`name = '${data.name}'`);
-      if (data.startDate) updateFields.push(`startDate = '${data.startDate}'`);
-      if (data.endDate) updateFields.push(`endDate = '${data.endDate}'`);
-      if (data.status) updateFields.push(`status = '${data.status}'`);
-      updateFields.push(`updatedAt = datetime('now')`);
+      // Atualizar fechamento usando Prisma ORM
+      const updatedClosing = await prisma.closing.update({
+        where: { id },
+        data: {
+          name: data.name,
+          startDate: data.startDate,
+          endDate: data.endDate,
+          status: data.status,
+        },
+        include: {
+          month: {
+            select: {
+              id: true,
+              name: true,
+              year: true,
+              month: true,
+            },
+          },
+          company: {
+            select: {
+              id: true,
+              name: true,
+              cnpj: true,
+            },
+          },
+        },
+      });
 
-      await prisma.$queryRaw`
-        UPDATE Closing 
-        SET ${updateFields.join(', ')}
-        WHERE id = ${id}
-      `;
-
-      // Buscar fechamento atualizado
-      const updatedClosing = await prisma.$queryRaw`
-        SELECT 
-          c.*,
-          m.name as monthName,
-          m.year as monthYear,
-          m.month as monthNumber,
-          comp.name as companyName,
-          comp.cnpj as companyCnpj
-        FROM Closing c
-        LEFT JOIN Month m ON c.monthId = m.id
-        LEFT JOIN Company comp ON c.companyId = comp.id
-        WHERE c.id = ${id}
-      ` as any[];
-
-      return rep.send(updatedClosing[0] || {});
+      return rep.send(updatedClosing);
     } catch (error) {
-      return rep.code(500).send({ message: "Erro interno do servidor" });
+      console.error("Erro ao atualizar fechamento:", error);
+      return rep.code(500).send({ 
+        message: "Erro interno do servidor",
+        error: error instanceof Error ? error.message : "Erro desconhecido"
+      });
     }
   });
 

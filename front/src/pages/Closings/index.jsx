@@ -154,17 +154,32 @@ export default function Closings() {
       // Remover campos que não vão para o backend
       const { closingType, monthPicker, ...closingData } = values
       
-      await api.post('/closings', {
+      // Preparar dados para envio
+      const submitData = {
         ...closingData,
         monthId: selectedMonth,
-        startDate: values.startDate.format('DD/MM/YYYY'),
-        endDate: values.endDate.format('DD/MM/YYYY')
-      })
+        startDate: values.startDate ? values.startDate.format('DD/MM/YYYY') : null,
+        endDate: values.endDate ? values.endDate.format('DD/MM/YYYY') : null
+      }
+      
+      // Se não há datas, usar datas padrão do mês selecionado
+      if (!submitData.startDate || !submitData.endDate) {
+        const monthData = months.find(m => m.id === selectedMonth);
+        if (monthData) {
+          const year = monthData.year;
+          const month = monthData.month;
+          submitData.startDate = `01/${month.toString().padStart(2, '0')}/${year}`;
+          submitData.endDate = `${new Date(year, month, 0).getDate()}/${month.toString().padStart(2, '0')}/${year}`;
+        }
+      }
+      
+      await api.post('/closings', submitData)
       message.success('Fechamento criado com sucesso!')
       setIsModalOpen(false)
       form.resetFields()
       loadClosings()
     } catch (error) {
+      console.error('Erro ao criar fechamento:', error)
       message.error(error.response?.data?.message || 'Erro ao criar fechamento')
     }
   }
@@ -174,17 +189,21 @@ export default function Closings() {
       // Remover campos que não vão para o backend
       const { closingType, monthPicker, ...closingData } = values
       
-      await api.put(`/closings/${editingClosing.id}`, {
+      // Preparar dados para envio
+      const submitData = {
         ...closingData,
-        startDate: values.startDate.format('DD/MM/YYYY'),
-        endDate: values.endDate.format('DD/MM/YYYY')
-      })
+        startDate: values.startDate ? values.startDate.format('DD/MM/YYYY') : null,
+        endDate: values.endDate ? values.endDate.format('DD/MM/YYYY') : null
+      }
+      
+      await api.put(`/closings/${editingClosing.id}`, submitData)
       message.success('Fechamento atualizado com sucesso!')
       setIsModalOpen(false)
       setEditingClosing(null)
       form.resetFields()
       loadClosings()
     } catch (error) {
+      console.error('Erro ao atualizar fechamento:', error)
       message.error('Erro ao atualizar fechamento')
     }
   }
