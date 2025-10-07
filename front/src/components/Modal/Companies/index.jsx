@@ -23,24 +23,18 @@ export default function AddCompanyModal({
 }) {
   const [form] = Form.useForm()
 
-  console.log('🔍 Modal Companies - Props:', {
-    isModalVisible,
-    editingCompany,
-    hasForm: !!form
-  });
+  // debug removido
 
   useEffect(() => {
-    console.log('🔄 useEffect executado:', { editingCompany, isModalVisible });
+    // debug removido
     
     if (editingCompany) {
       const formattedCompany = {
         ...editingCompany,
         dateRegistration: dayjs(editingCompany.dateRegistration),
       }
-      console.log('📝 Preenchendo formulário para edição:', formattedCompany);
       form.setFieldsValue(formattedCompany)
     } else {
-      console.log('🆕 Resetando formulário para nova empresa');
       form.resetFields()
       // Definir valores padrão para nova empresa
       form.setFieldsValue({
@@ -53,7 +47,6 @@ export default function AddCompanyModal({
 
   const handleSubmit = async (values) => {
     try {
-      console.log('📝 Valores do formulário:', values);
       
       // Validação adicional
       if (!values.name || !values.type || !values.cnpj || !values.responsible || !values.dateRegistration) {
@@ -66,18 +59,13 @@ export default function AddCompanyModal({
         dateRegistration: values.dateRegistration.format('YYYY-MM-DD'),
       }
       
-      console.log('📅 Valores formatados:', formattedValues);
-
       if (editingCompany) {
         // Atualizar empresa existente
-        console.log('🔄 Atualizando empresa:', editingCompany.id);
         await api.put(`/company/${editingCompany.id}`, formattedValues)
         message.success('Empresa atualizada com sucesso!')
       } else {
         // Criar nova empresa
-        console.log('➕ Criando nova empresa...');
         const response = await api.post('/company', formattedValues)
-        console.log('✅ Resposta da API:', response);
         message.success('Empresa cadastrada com sucesso!')
       }
 
@@ -111,7 +99,7 @@ export default function AddCompanyModal({
       width={600}
       destroyOnClose={true}
     >
-      {console.log('🎭 Modal renderizando com:', { isModalVisible, editingCompany })}
+      {/* debug removido */}
       <Form form={form} onFinish={handleSubmit} layout="vertical">
         <Form.Item
           label="Nome da Empresa"

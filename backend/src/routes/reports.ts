@@ -112,7 +112,7 @@ export async function reportRoutes(app: FastifyInstance) {
       }
 
       if (startDate && endDate) {
-        whereClause.createdAt = {
+        whereClause.dateRegistration = {
           gte: new Date(startDate as string),
           lte: new Date(endDate as string)
         };
@@ -122,7 +122,7 @@ export async function reportRoutes(app: FastifyInstance) {
         where: whereClause,
         include: {
           loads: {
-            orderBy: { createdAt: 'desc' },
+            orderBy: { date: 'desc' },
             take: 3
           }
         },

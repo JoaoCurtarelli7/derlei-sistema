@@ -30,9 +30,7 @@ export default function Load() {
 
   const fetchCompanies = async () => {
     try {
-      console.log('Buscando empresas...')
       const response = await api.get('/companies')
-      console.log('Empresas carregadas:', response.data)
       setCompanies(response.data)
     } catch (error) {
       console.error('Erro ao buscar empresas:', error)

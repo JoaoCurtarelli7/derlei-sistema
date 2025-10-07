@@ -26,8 +26,8 @@ export default function AddVehicleModal({ visible, onCancel, onSave, vehicle }) 
         onSave(formattedValues);
         form.resetFields();
       })
-      .catch((err) => {
-        console.log("Validação falhou:", err);
+      .catch(() => {
+        // validação falhou
       });
   };
 

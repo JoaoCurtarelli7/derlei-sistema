@@ -1,13 +1,14 @@
 import jsPDF from 'jspdf'
-import 'jspdf-autotable'
+import autoTable from 'jspdf-autotable'   // 👈 esta é a linha correta
+import * as XLSX from 'xlsx'
+import { saveAs } from 'file-saver'
+import dayjs from 'dayjs'
 
 // Verificar se jsPDF está disponível
 if (typeof window !== 'undefined' && !window.jsPDF) {
   console.warn('jsPDF não está disponível no window')
 }
-import * as XLSX from 'xlsx'
-import { saveAs } from 'file-saver'
-import dayjs from 'dayjs'
+
 
 // Função para extrair valor de dados aninhados
 const getNestedValue = (obj, path) => {
@@ -37,7 +38,10 @@ const formatCurrency = (value) => {
 // Função para formatar data
 const formatDate = (date) => {
   try {
-    return date ? dayjs(date).format('DD/MM/YYYY') : 'N/A'
+    if (!date) return 'N/A'
+    const d = dayjs(date)
+    if (!d.isValid()) return 'N/A'
+    return d.format('DD/MM/YYYY')
   } catch (error) {
     return 'N/A'
   }
@@ -50,18 +54,18 @@ export const exportToPDF = (data, columns, title, filename) => {
     if (typeof jsPDF === 'undefined') {
       throw new Error('jsPDF não está disponível. Verifique se a biblioteca está instalada.')
     }
-    
+
     const doc = new jsPDF()
-    
+
     // Cabeçalho do documento
     doc.setFontSize(20)
     doc.text(title, 14, 22)
-    
+
     // Informações do relatório
     doc.setFontSize(10)
     doc.text(`Gerado em: ${dayjs().format('DD/MM/YYYY HH:mm')}`, 14, 30)
     doc.text(`Total de registros: ${data ? data.length : 0}`, 14, 35)
-    
+
     // Verificar se há dados
     if (!data || data.length === 0) {
       doc.setFontSize(12)
@@ -72,61 +76,62 @@ export const exportToPDF = (data, columns, title, filename) => {
         return columns.map(col => {
           try {
             // Extrair valor baseado no dataIndex
-            let value = getNestedValue(item, col.dataIndex)
-            
-            // Aplicar formatação específica baseada no título da coluna
-            if (col.title.includes('Valor') || col.title.includes('Salário') || col.title.includes('Custo') || col.title.includes('Total')) {
-              value = formatCurrency(value)
-            } else if (col.title.includes('Data')) {
-              value = formatDate(value)
-            } else if (col.title.includes('Status')) {
-              value = value || 'N/A'
-            } else if (col.title.includes('Peso')) {
-              value = `${value || 0} kg`
+            let rawValue = getNestedValue(item, col.dataIndex)
+
+            // Aplicar render customizado se existir
+            let value = typeof col.render === 'function' ? col.render(rawValue, item) : rawValue
+
+            // Normalizar objetos/arrays para texto amigável
+            if (Array.isArray(value)) {
+              value = value.length
+            } else if (value && typeof value === 'object') {
+              value = JSON.stringify(value)
             }
-            
-            return value || ''
+
+            // Aplicar formatação apenas se NÃO houver render customizado
+            if (!col.render) {
+              if (col.title.includes('Valor') || col.title.includes('Salário') || col.title.includes('Custo') || col.title.includes('Total')) {
+                value = formatCurrency(value)
+              } else if (col.title.includes('Data')) {
+                value = formatDate(value)
+              } else if (col.title.includes('Status')) {
+                value = value || 'N/A'
+              } else if (col.title.includes('Peso')) {
+                value = `${value || 0} kg`
+              }
+            }
+
+            return value ?? ''
           } catch (error) {
             console.warn('Erro ao processar coluna:', col.title, error)
             return ''
           }
         })
       })
-      
+
       const tableColumns = columns.map(col => col.title)
-      
+
       // Adicionar tabela
-      doc.autoTable({
+      autoTable(doc, {
         head: [tableColumns],
         body: tableData,
         startY: 45,
-        styles: {
-          fontSize: 8,
-          cellPadding: 3
-        },
-        headStyles: {
-          fillColor: [24, 144, 255],
-          textColor: 255,
-          fontStyle: 'bold'
-        },
-        alternateRowStyles: {
-          fillColor: [245, 245, 245]
-        },
+        styles: { fontSize: 8, cellPadding: 3 },
+        headStyles: { fillColor: [24, 144, 255], textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [245, 245, 245] },
         margin: { top: 45 }
       })
     }
-    
+
     // Rodapé
-    const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 60
+    const finalY = (doc.lastAutoTable?.finalY ?? 50) + 10
     doc.setFontSize(8)
     doc.text('Solução Logística - Relatórios', 14, finalY)
-    doc.text(`Página ${doc.internal.getNumberOfPages()}`, 180, finalY)
-    
+    doc.text(`Página ${typeof doc.getNumberOfPages === 'function' ? doc.getNumberOfPages() : (doc.internal && typeof doc.internal.getNumberOfPages === 'function' ? doc.internal.getNumberOfPages() : 1)}`, 180, finalY)
+
     // Salvar arquivo
     const fileName = `${filename}_${dayjs().format('YYYY-MM-DD_HH-mm')}.pdf`
-    console.log('Salvando PDF:', fileName)
     doc.save(fileName)
-    console.log('PDF salvo com sucesso!')
   } catch (error) {
     console.error('Erro ao gerar PDF:', error)
     console.error('Stack trace:', error.stack)
@@ -148,13 +153,13 @@ export const exportToExcel = (data, columns, title, filename) => {
         [''],
         ['Status:', 'Nenhum dado encontrado para este relatório.']
       ]
-      
+
       const infoSheet = XLSX.utils.aoa_to_sheet(infoData)
       XLSX.utils.book_append_sheet(wb, infoSheet, 'Informações')
-      
+
       const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
       const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
-      
+
       saveAs(blob, `${filename}_${dayjs().format('YYYY-MM-DD_HH-mm')}.xlsx`)
       return
     }
@@ -165,20 +170,32 @@ export const exportToExcel = (data, columns, title, filename) => {
       columns.forEach(col => {
         try {
           // Extrair valor baseado no dataIndex
-          let value = getNestedValue(item, col.dataIndex)
-          
-          // Aplicar formatação específica baseada no título da coluna
-          if (col.title.includes('Valor') || col.title.includes('Salário') || col.title.includes('Custo') || col.title.includes('Total')) {
-            value = formatCurrency(value)
-          } else if (col.title.includes('Data')) {
-            value = formatDate(value)
-          } else if (col.title.includes('Status')) {
-            value = value || 'N/A'
-          } else if (col.title.includes('Peso')) {
-            value = `${value || 0} kg`
+          let rawValue = getNestedValue(item, col.dataIndex)
+
+          // Aplicar render customizado se existir
+          let value = typeof col.render === 'function' ? col.render(rawValue, item) : rawValue
+
+          // Normalizar objetos/arrays para texto amigável
+          if (Array.isArray(value)) {
+            value = value.length
+          } else if (value && typeof value === 'object') {
+            value = JSON.stringify(value)
           }
-          
-          row[col.title] = value || ''
+
+          // Aplicar formatação apenas se NÃO houver render customizado
+          if (!col.render) {
+            if (col.title.includes('Valor') || col.title.includes('Salário') || col.title.includes('Custo') || col.title.includes('Total')) {
+              value = formatCurrency(value)
+            } else if (col.title.includes('Data')) {
+              value = formatDate(value)
+            } else if (col.title.includes('Status')) {
+              value = value || 'N/A'
+            } else if (col.title.includes('Peso')) {
+              value = `${value || 0} kg`
+            }
+          }
+
+          row[col.title] = value ?? ''
         } catch (error) {
           console.warn('Erro ao processar coluna:', col.title, error)
           row[col.title] = ''
@@ -186,10 +203,10 @@ export const exportToExcel = (data, columns, title, filename) => {
       })
       return row
     })
-    
+
     // Criar workbook
     const wb = XLSX.utils.book_new()
-    
+
     // Adicionar informações do relatório
     const infoData = [
       ['Relatório:', title],
@@ -198,23 +215,23 @@ export const exportToExcel = (data, columns, title, filename) => {
       [''],
       ['Dados do Relatório:']
     ]
-    
+
     const infoSheet = XLSX.utils.aoa_to_sheet(infoData)
     XLSX.utils.book_append_sheet(wb, infoSheet, 'Informações')
-    
+
     // Adicionar dados principais
     const dataSheet = XLSX.utils.json_to_sheet(excelData)
-    
+
     // Ajustar largura das colunas
     const colWidths = columns.map(() => ({ wch: 20 }))
     dataSheet['!cols'] = colWidths
-    
+
     XLSX.utils.book_append_sheet(wb, dataSheet, 'Dados')
-    
+
     // Gerar arquivo Excel
     const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
     const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
-    
+
     saveAs(blob, `${filename}_${dayjs().format('YYYY-MM-DD_HH-mm')}.xlsx`)
   } catch (error) {
     console.error('Erro ao gerar Excel:', error)
@@ -228,9 +245,12 @@ export const exportEmployeeReport = (data, format) => {
     { title: 'Nome', dataIndex: 'name' },
     { title: 'CPF', dataIndex: 'cpf' },
     { title: 'Cargo', dataIndex: 'role' },
-    { title: 'Status', dataIndex: 'status', 
-      render: (status) => status || 'N/A' },
-    { title: 'Salário Base', dataIndex: 'baseSalary',
+    {
+      title: 'Status', dataIndex: 'status',
+      render: (status) => status || 'N/A'
+    },
+    {
+      title: 'Salário Base', dataIndex: 'baseSalary',
       render: (value) => {
         try {
           return new Intl.NumberFormat('pt-BR', {
@@ -240,17 +260,20 @@ export const exportEmployeeReport = (data, format) => {
         } catch (error) {
           return 'R$ 0,00'
         }
-      } },
-    { title: 'Data Contratação', dataIndex: 'hireDate',
+      }
+    },
+    {
+      title: 'Data Contratação', dataIndex: 'hireDate',
       render: (date) => {
         try {
           return date ? dayjs(date).format('DD/MM/YYYY') : 'N/A'
         } catch (error) {
           return 'N/A'
         }
-      } }
+      }
+    }
   ]
-  
+
   if (format === 'pdf') {
     exportToPDF(data, columns, 'Relatório de Funcionários', 'funcionarios')
   } else if (format === 'excel') {
@@ -263,14 +286,21 @@ export const exportCompanyReport = (data, format) => {
   const columns = [
     { title: 'Nome', dataIndex: 'name' },
     { title: 'CNPJ', dataIndex: 'cnpj' },
-    { title: 'Status', dataIndex: 'status',
-      render: (status) => status },
-    { title: 'Cargas', dataIndex: 'loads',
-      render: (loads) => loads?.length || 0 },
-    { title: 'Data Criação', dataIndex: 'createdAt',
-      render: (date) => dayjs(date).format('DD/MM/YYYY') }
+    {
+      title: 'Status', dataIndex: 'status',
+      render: (status) => status
+    },
+    {
+      title: 'Cargas', dataIndex: 'loads',
+      render: (loads) => loads?.length || 0
+    },
+    {
+      title: 'Data Criação', dataIndex: 'dateRegistration',
+      render: (_, record) => {
+        return record.dateRegistration ? dayjs(record.dateRegistration).format('DD/MM/YYYY') : '- - -'}
+    }
   ]
-  
+
   if (format === 'pdf') {
     exportToPDF(data, columns, 'Relatório de Empresas', 'empresas')
   } else if (format === 'excel') {
@@ -288,7 +318,7 @@ export const exportLoadsReport = (data, format) => {
     { title: 'Valor Total', dataIndex: 'totalValue' },
     { title: 'Data', dataIndex: 'date' }
   ]
-  
+
   if (format === 'pdf') {
     exportToPDF(data, columns, 'Relatório de Cargas', 'cargas')
   } else if (format === 'excel') {
@@ -305,7 +335,7 @@ export const exportMaintenanceReport = (data, format) => {
     { title: 'Valor', dataIndex: 'value' },
     { title: 'KM', dataIndex: 'km' }
   ]
-  
+
   if (format === 'pdf') {
     exportToPDF(data, columns, 'Relatório de Manutenções', 'manutencoes')
   } else if (format === 'excel') {
@@ -322,7 +352,7 @@ export const exportFinancialReport = (data, format) => {
     { title: 'Funcionário', dataIndex: ['employee', 'name'] },
     { title: 'Descrição', dataIndex: 'description' }
   ]
-  
+
   if (format === 'pdf') {
     exportToPDF(data, columns, 'Relatório Financeiro', 'financeiro')
   } else if (format === 'excel') {
@@ -339,7 +369,7 @@ export const exportTripsReport = (data, format) => {
     { title: 'Status', dataIndex: 'status' },
     { title: 'Data', dataIndex: 'date' }
   ]
-  
+
   if (format === 'pdf') {
     exportToPDF(data, columns, 'Relatório de Viagens', 'viagens')
   } else if (format === 'excel') {

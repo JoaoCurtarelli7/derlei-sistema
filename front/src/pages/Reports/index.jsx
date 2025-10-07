@@ -1,42 +1,44 @@
 import React, { useState, useEffect } from 'react'
 import {
-    Card,
-    Row,
-    Col,
-    Typography,
-    Button,
-    Space,
-    DatePicker,
-    Select,
-    Table,
-    Statistic, Tabs,
-    Tag,
-    Divider, message
+  Card,
+  Row,
+  Col,
+  Typography,
+  Button,
+  Space,
+  DatePicker,
+  Select,
+  Table,
+  Statistic, Tabs,
+  Tag,
+  Divider, message
 } from 'antd'
 import {
-    DownloadOutlined,
-    EyeOutlined,
-    FilterOutlined,
-    ReloadOutlined,
-    BarChartOutlined,
-    TeamOutlined,
-    BankOutlined,
-    CarOutlined,
-    DollarOutlined,
-    FileTextOutlined,
-    ToolOutlined,
-    CompassOutlined
+  DownloadOutlined,
+  EyeOutlined,
+  FilterOutlined,
+  ReloadOutlined,
+  BarChartOutlined,
+  TeamOutlined,
+  BankOutlined,
+  CarOutlined,
+  DollarOutlined,
+  FileTextOutlined,
+  ToolOutlined,
+  CompassOutlined
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import api from '../../lib/api'
 import dayjs from 'dayjs'
+import 'dayjs/locale/pt-br'
+dayjs.locale('pt-br')
 import {
-    exportEmployeeReport,
-    exportCompanyReport,
-    exportLoadsReport,
-    exportMaintenanceReport,
-    exportFinancialReport,
-    exportTripsReport
+  exportEmployeeReport,
+  exportCompanyReport,
+  exportLoadsReport,
+  exportMaintenanceReport,
+  exportFinancialReport,
+  exportTripsReport
 } from '../../utils/exportUtils'
 
 const { Title, Text, Paragraph } = Typography
@@ -87,14 +89,14 @@ export default function Reports() {
     try {
       setLoading(true)
       const params = new URLSearchParams()
-      
+
       if (filters.status !== 'todos') params.append('status', filters.status)
       if (filters.startDate) params.append('startDate', filters.startDate.format('YYYY-MM-DD'))
       if (filters.endDate) params.append('endDate', filters.endDate.format('YYYY-MM-DD'))
 
       const response = await api.get(`/reports/employees?${params.toString()}`)
       setEmployeesData(response.data)
-      
+
       if (response.data.employees && response.data.employees.length > 0) {
         message.success(`Relatório de funcionários carregado! ${response.data.employees.length} registros encontrados.`)
       } else {
@@ -113,14 +115,14 @@ export default function Reports() {
     try {
       setLoading(true)
       const params = new URLSearchParams()
-      
+
       if (filters.status !== 'todos') params.append('status', filters.status)
       if (filters.startDate) params.append('startDate', filters.startDate.format('YYYY-MM-DD'))
       if (filters.endDate) params.append('endDate', filters.endDate.format('YYYY-MM-DD'))
 
       const response = await api.get(`/reports/companies?${params.toString()}`)
       setCompaniesData(response.data)
-      
+
       if (response.data.companies && response.data.companies.length > 0) {
         message.success(`Relatório de empresas carregado! ${response.data.companies.length} registros encontrados.`)
       } else {
@@ -139,7 +141,7 @@ export default function Reports() {
     try {
       setLoading(true)
       const params = new URLSearchParams()
-      
+
       if (filters.status !== 'todos') params.append('status', filters.status)
       if (filters.companyId !== 'todos') params.append('companyId', filters.companyId)
       if (filters.startDate) params.append('startDate', filters.startDate.format('YYYY-MM-DD'))
@@ -147,7 +149,7 @@ export default function Reports() {
 
       const response = await api.get(`/reports/loads?${params.toString()}`)
       setLoadsData(response.data)
-      
+
       if (response.data.loads && response.data.loads.length > 0) {
         message.success(`Relatório de cargas carregado! ${response.data.loads.length} registros encontrados.`)
       } else {
@@ -166,14 +168,14 @@ export default function Reports() {
     try {
       setLoading(true)
       const params = new URLSearchParams()
-      
+
       if (filters.truckId !== 'todos') params.append('truckId', filters.truckId)
       if (filters.startDate) params.append('startDate', filters.startDate.format('YYYY-MM-DD'))
       if (filters.endDate) params.append('endDate', filters.endDate.format('YYYY-MM-DD'))
 
       const response = await api.get(`/reports/maintenance?${params.toString()}`)
       setMaintenanceData(response.data)
-      
+
       if (response.data.maintenance && response.data.maintenance.length > 0) {
         message.success(`Relatório de manutenções carregado! ${response.data.maintenance.length} registros encontrados.`)
       } else {
@@ -192,14 +194,14 @@ export default function Reports() {
     try {
       setLoading(true)
       const params = new URLSearchParams()
-      
+
       if (filters.type !== 'todos') params.append('type', filters.type)
       if (filters.startDate) params.append('startDate', filters.startDate.format('YYYY-MM-DD'))
       if (filters.endDate) params.append('endDate', filters.endDate.format('YYYY-MM-DD'))
 
       const response = await api.get(`/reports/financial?${params.toString()}`)
       setFinancialData(response.data)
-      
+
       if (response.data.transactions && response.data.transactions.length > 0) {
         message.success(`Relatório financeiro carregado! ${response.data.transactions.length} registros encontrados.`)
       } else {
@@ -218,7 +220,7 @@ export default function Reports() {
     try {
       setLoading(true)
       const params = new URLSearchParams()
-      
+
       if (filters.status !== 'todos') params.append('status', filters.status)
       if (filters.truckId !== 'todos') params.append('truckId', filters.truckId)
       if (filters.startDate) params.append('startDate', filters.startDate.format('YYYY-MM-DD'))
@@ -226,7 +228,7 @@ export default function Reports() {
 
       const response = await api.get(`/reports/trips?${params.toString()}`)
       setTripsData(response.data)
-      
+
       if (response.data.trips && response.data.trips.length > 0) {
         message.success(`Relatório de viagens carregado! ${response.data.trips.length} registros encontrados.`)
       } else {
@@ -259,10 +261,10 @@ export default function Reports() {
   const exportReport = (format, reportType) => {
     try {
       message.loading(`Exportando relatório ${reportType} em ${format.toUpperCase()}...`, 0)
-      
+
       let data = []
       let exportFunction = null
-      
+
       switch (reportType) {
         case 'funcionários':
           data = employeesData?.employees || []
@@ -293,7 +295,7 @@ export default function Reports() {
           message.error('Tipo de relatório não encontrado')
           return
       }
-      
+
       if (exportFunction) {
         try {
           exportFunction(data, format)
@@ -338,54 +340,83 @@ export default function Reports() {
     { title: 'Nome', dataIndex: 'name', key: 'name' },
     { title: 'CPF', dataIndex: 'cpf', key: 'cpf' },
     { title: 'Cargo', dataIndex: 'role', key: 'role' },
-    { title: 'Status', dataIndex: 'status', key: 'status', 
-      render: (status) => <Tag color={status === 'Ativo' ? 'green' : 'red'}>{status}</Tag> },
-    { title: 'Salário Base', dataIndex: 'baseSalary', key: 'baseSalary',
-      render: (value) => formatCurrency(value) },
-    { title: 'Data Contratação', dataIndex: 'hireDate', key: 'hireDate',
-      render: (date) => formatDate(date) }
+    {
+      title: 'Status', dataIndex: 'status', key: 'status',
+      render: (status) => <Tag color={status === 'Ativo' ? 'green' : 'red'}>{status}</Tag>
+    },
+    {
+      title: 'Salário Base', dataIndex: 'baseSalary', key: 'baseSalary',
+      render: (value) => formatCurrency(value)
+    },
+    {
+      title: 'Data Contratação', dataIndex: 'hireDate', key: 'hireDate',
+      render: (date) => formatDate(date)
+    }
   ]
 
   const companyColumns = [
     { title: 'Nome', dataIndex: 'name', key: 'name' },
     { title: 'CNPJ', dataIndex: 'cnpj', key: 'cnpj' },
-    { title: 'Status', dataIndex: 'status', key: 'status',
-      render: (status) => <Tag color={status === 'Ativo' ? 'green' : 'red'}>{status}</Tag> },
-    { title: 'Cargas', dataIndex: 'loads', key: 'loads',
-      render: (loads) => loads?.length || 0 },
-    { title: 'Data Criação', dataIndex: 'createdAt', key: 'createdAt',
-      render: (date) => formatDate(date) }
+    {
+      title: 'Status', dataIndex: 'status', key: 'status',
+      render: (status) => <Tag color={status === 'Ativo' ? 'green' : 'red'}>{status}</Tag>
+    },
+    {
+      title: 'Cargas', dataIndex: 'loads', key: 'loads',
+      render: (loads) => loads?.length || 0
+    },
+    {
+      title: 'Data Criação', dataIndex: 'createdAt', key: 'createdAt',
+      render: (_, record) => {
+        return formatDate(record.dateRegistration)}
+    }
   ]
 
   const loadsColumns = [
     { title: 'Número da Carga', dataIndex: 'loadingNumber', key: 'loadingNumber' },
     { title: 'Empresa', dataIndex: ['company', 'name'], key: 'company' },
     { title: 'Entregas', dataIndex: 'deliveries', key: 'deliveries' },
-    { title: 'Peso (kg)', dataIndex: 'cargoWeight', key: 'cargoWeight',
-      render: (weight) => `${weight || 0} kg` },
-    { title: 'Valor Total', dataIndex: 'totalValue', key: 'totalValue',
-      render: (value) => formatCurrency(value) },
-    { title: 'Data', dataIndex: 'date', key: 'date',
-      render: (date) => formatDate(date) }
+    {
+      title: 'Peso (kg)', dataIndex: 'cargoWeight', key: 'cargoWeight',
+      render: (weight) => `${weight || 0} kg`
+    },
+    {
+      title: 'Valor Total', dataIndex: 'totalValue', key: 'totalValue',
+      render: (value) => formatCurrency(value)
+    },
+    {
+      title: 'Data', dataIndex: 'date', key: 'date',
+      render: (date) => formatDate(date)
+    }
   ]
 
   const maintenanceColumns = [
     { title: 'Serviço', dataIndex: 'service', key: 'service' },
     { title: 'Caminhão', dataIndex: ['truck', 'plate'], key: 'truck' },
-    { title: 'Data', dataIndex: 'date', key: 'date',
-      render: (date) => formatDate(date) },
-    { title: 'Valor', dataIndex: 'value', key: 'value',
-      render: (value) => formatCurrency(value) },
+    {
+      title: 'Data', dataIndex: 'date', key: 'date',
+      render: (date) => formatDate(date)
+    },
+    {
+      title: 'Valor', dataIndex: 'value', key: 'value',
+      render: (value) => formatCurrency(value)
+    },
     { title: 'KM', dataIndex: 'km', key: 'km' }
   ]
 
   const financialColumns = [
-    { title: 'Data', dataIndex: 'date', key: 'date',
-      render: (date) => formatDate(date) },
-    { title: 'Tipo', dataIndex: 'type', key: 'type',
-      render: (type) => <Tag color={type === 'Crédito' ? 'green' : 'red'}>{type}</Tag> },
-    { title: 'Valor', dataIndex: 'amount', key: 'amount',
-      render: (value) => formatCurrency(value) },
+    {
+      title: 'Data', dataIndex: 'date', key: 'date',
+      render: (date) => formatDate(date)
+    },
+    {
+      title: 'Tipo', dataIndex: 'type', key: 'type',
+      render: (type) => <Tag color={type === 'Crédito' ? 'green' : 'red'}>{type}</Tag>
+    },
+    {
+      title: 'Valor', dataIndex: 'amount', key: 'amount',
+      render: (value) => formatCurrency(value)
+    },
     { title: 'Funcionário', dataIndex: ['employee', 'name'], key: 'employee' },
     { title: 'Descrição', dataIndex: 'description', key: 'description' }
   ]
@@ -394,10 +425,14 @@ export default function Reports() {
     { title: 'Destino', dataIndex: 'destination', key: 'destination' },
     { title: 'Motorista', dataIndex: 'driver', key: 'driver' },
     { title: 'Caminhão', dataIndex: ['truck', 'plate'], key: 'truck' },
-    { title: 'Status', dataIndex: 'status', key: 'status',
-      render: (status) => <Tag color={status === 'Concluída' ? 'green' : 'orange'}>{status}</Tag> },
-    { title: 'Data', dataIndex: 'date', key: 'date',
-      render: (date) => formatDate(date) }
+    {
+      title: 'Status', dataIndex: 'status', key: 'status',
+      render: (status) => <Tag color={status === 'Concluída' ? 'green' : 'orange'}>{status}</Tag>
+    },
+    {
+      title: 'Data', dataIndex: 'date', key: 'date',
+      render: (date) => formatDate(date)
+    }
   ]
 
   return (
@@ -419,6 +454,8 @@ export default function Reports() {
             <Text strong>Período:</Text>
             <RangePicker
               style={{ width: '100%', marginTop: 8 }}
+              format="DD/MM/YYYY"
+              inputReadOnly
               value={[filters.startDate, filters.endDate]}
               onChange={(dates) => {
                 handleFilterChange('startDate', dates?.[0] || null)
@@ -452,8 +489,8 @@ export default function Reports() {
           </Col>
           <Col xs={24} sm={12} md={6}>
             <Space>
-              <Button 
-                type="primary" 
+              <Button
+                type="primary"
                 icon={<FilterOutlined />}
                 onClick={() => {
                   if (activeTab === 'employees') loadEmployeeReport()
@@ -476,21 +513,21 @@ export default function Reports() {
       </Card>
 
       {/* Abas de Relatórios */}
-      <Tabs 
-        activeKey={activeTab} 
+      <Tabs
+        activeKey={activeTab}
         onChange={setActiveTab}
         type="card"
         size="large"
         style={{ marginBottom: '24px' }}
       >
         {/* Visão Geral do Sistema */}
-        <TabPane 
+        <TabPane
           tab={
             <span>
               <BarChartOutlined />
               Visão Geral
             </span>
-          } 
+          }
           key="overview"
         >
           <Card>
@@ -542,9 +579,9 @@ export default function Reports() {
                 </Card>
               </Col>
             </Row>
-            
+
             <Divider />
-            
+
             <Row gutter={[16, 16]}>
               <Col xs={24} sm={12} lg={6}>
                 <Card>
@@ -585,8 +622,8 @@ export default function Reports() {
             </Row>
 
             <div style={{ textAlign: 'center', marginTop: '24px' }}>
-              <Button 
-                type="primary" 
+              <Button
+                type="primary"
                 icon={<ReloadOutlined />}
                 onClick={loadSystemOverview}
                 loading={loading}
@@ -598,33 +635,33 @@ export default function Reports() {
         </TabPane>
 
         {/* Relatório de Funcionários */}
-        <TabPane 
+        <TabPane
           tab={
             <span>
               <TeamOutlined />
               Funcionários
             </span>
-          } 
+          }
           key="employees"
         >
           <Card>
             <div style={{ marginBottom: '16px' }}>
               <Space>
-                <Button 
-                  type="primary" 
+                <Button
+                  type="primary"
                   icon={<EyeOutlined />}
                   onClick={loadEmployeeReport}
                   loading={loading}
                 >
                   Gerar Relatório
                 </Button>
-                <Button 
+                <Button
                   icon={<DownloadOutlined />}
                   onClick={() => exportReport('pdf', 'funcionários')}
                 >
                   Exportar PDF
                 </Button>
-                <Button 
+                <Button
                   icon={<DownloadOutlined />}
                   onClick={() => exportReport('excel', 'funcionários')}
                 >
@@ -640,15 +677,15 @@ export default function Reports() {
                     <Statistic title="Total" value={employeesData.summary?.total || 0} />
                   </Col>
                   <Col xs={24} sm={8}>
-                    <Statistic 
-                      title="Ativos" 
+                    <Statistic
+                      title="Ativos"
                       value={employeesData.summary?.active || 0}
                       valueStyle={{ color: '#52c41a' }}
                     />
                   </Col>
                   <Col xs={24} sm={8}>
-                    <Statistic 
-                      title="Total Salários" 
+                    <Statistic
+                      title="Total Salários"
                       value={formatCurrency(employeesData.summary?.totalSalary || 0)}
                       valueStyle={{ color: '#1890ff' }}
                     />
@@ -671,33 +708,33 @@ export default function Reports() {
         </TabPane>
 
         {/* Relatório de Empresas */}
-        <TabPane 
+        <TabPane
           tab={
             <span>
               <BankOutlined />
               Empresas
             </span>
-          } 
+          }
           key="companies"
         >
           <Card>
             <div style={{ marginBottom: '16px' }}>
               <Space>
-                <Button 
-                  type="primary" 
+                <Button
+                  type="primary"
                   icon={<EyeOutlined />}
                   onClick={loadCompanyReport}
                   loading={loading}
                 >
                   Gerar Relatório
                 </Button>
-                <Button 
+                <Button
                   icon={<DownloadOutlined />}
                   onClick={() => exportReport('pdf', 'empresas')}
                 >
                   Exportar PDF
                 </Button>
-                <Button 
+                <Button
                   icon={<DownloadOutlined />}
                   onClick={() => exportReport('excel', 'empresas')}
                 >
@@ -713,15 +750,15 @@ export default function Reports() {
                     <Statistic title="Total" value={companiesData.summary?.total || 0} />
                   </Col>
                   <Col xs={24} sm={8}>
-                    <Statistic 
-                      title="Ativas" 
+                    <Statistic
+                      title="Ativas"
                       value={companiesData.summary?.active || 0}
                       valueStyle={{ color: '#52c41a' }}
                     />
                   </Col>
                   <Col xs={24} sm={8}>
-                    <Statistic 
-                      title="Inativas" 
+                    <Statistic
+                      title="Inativas"
                       value={companiesData.summary?.inactive || 0}
                       valueStyle={{ color: '#ff4d4f' }}
                     />
@@ -744,33 +781,33 @@ export default function Reports() {
         </TabPane>
 
         {/* Relatório de Cargas */}
-        <TabPane 
+        <TabPane
           tab={
             <span>
               <FileTextOutlined />
               Cargas
             </span>
-          } 
+          }
           key="loads"
         >
           <Card>
             <div style={{ marginBottom: '16px' }}>
               <Space>
-                <Button 
-                  type="primary" 
+                <Button
+                  type="primary"
                   icon={<EyeOutlined />}
                   onClick={loadLoadsReport}
                   loading={loading}
                 >
                   Gerar Relatório
                 </Button>
-                <Button 
+                <Button
                   icon={<DownloadOutlined />}
                   onClick={() => exportReport('pdf', 'cargas')}
                 >
                   Exportar PDF
                 </Button>
-                <Button 
+                <Button
                   icon={<DownloadOutlined />}
                   onClick={() => exportReport('excel', 'cargas')}
                 >
@@ -786,15 +823,15 @@ export default function Reports() {
                     <Statistic title="Total" value={loadsData.summary?.total || 0} />
                   </Col>
                   <Col xs={24} sm={8}>
-                    <Statistic 
-                      title="Valor Total" 
+                    <Statistic
+                      title="Valor Total"
                       value={formatCurrency(loadsData.summary?.totalValue || 0)}
                       valueStyle={{ color: '#52c41a' }}
                     />
                   </Col>
                   <Col xs={24} sm={8}>
-                    <Statistic 
-                      title="Por Status" 
+                    <Statistic
+                      title="Por Status"
                       value={Object.keys(loadsData.summary?.byStatus || {}).length}
                       suffix="status"
                     />
@@ -817,33 +854,33 @@ export default function Reports() {
         </TabPane>
 
         {/* Relatório de Manutenções */}
-        <TabPane 
+        <TabPane
           tab={
             <span>
               <ToolOutlined />
               Manutenções
             </span>
-          } 
+          }
           key="maintenance"
         >
           <Card>
             <div style={{ marginBottom: '16px' }}>
               <Space>
-                <Button 
-                  type="primary" 
+                <Button
+                  type="primary"
                   icon={<EyeOutlined />}
                   onClick={loadMaintenanceReport}
                   loading={loading}
                 >
                   Gerar Relatório
                 </Button>
-                <Button 
+                <Button
                   icon={<DownloadOutlined />}
                   onClick={() => exportReport('pdf', 'manutenções')}
                 >
                   Exportar PDF
                 </Button>
-                <Button 
+                <Button
                   icon={<DownloadOutlined />}
                   onClick={() => exportReport('excel', 'manutenções')}
                 >
@@ -859,15 +896,15 @@ export default function Reports() {
                     <Statistic title="Total" value={maintenanceData.summary?.total || 0} />
                   </Col>
                   <Col xs={24} sm={8}>
-                    <Statistic 
-                      title="Custo Total" 
+                    <Statistic
+                      title="Custo Total"
                       value={formatCurrency(maintenanceData.summary?.totalCost || 0)}
                       valueStyle={{ color: '#ff4d4f' }}
                     />
                   </Col>
                   <Col xs={24} sm={8}>
-                    <Statistic 
-                      title="Custo Médio" 
+                    <Statistic
+                      title="Custo Médio"
                       value={formatCurrency(maintenanceData.summary?.averageCost || 0)}
                       valueStyle={{ color: '#faad14' }}
                     />
@@ -890,33 +927,33 @@ export default function Reports() {
         </TabPane>
 
         {/* Relatório Financeiro */}
-        <TabPane 
+        <TabPane
           tab={
             <span>
               <DollarOutlined />
               Financeiro
             </span>
-          } 
+          }
           key="financial"
         >
           <Card>
             <div style={{ marginBottom: '16px' }}>
               <Space>
-                <Button 
-                  type="primary" 
+                <Button
+                  type="primary"
                   icon={<EyeOutlined />}
                   onClick={loadFinancialReport}
                   loading={loading}
                 >
                   Gerar Relatório
                 </Button>
-                <Button 
+                <Button
                   icon={<DownloadOutlined />}
                   onClick={() => exportReport('pdf', 'financeiro')}
                 >
                   Exportar PDF
                 </Button>
-                <Button 
+                <Button
                   icon={<DownloadOutlined />}
                   onClick={() => exportReport('excel', 'financeiro')}
                 >
@@ -932,25 +969,25 @@ export default function Reports() {
                     <Statistic title="Total" value={financialData.summary?.total || 0} />
                   </Col>
                   <Col xs={24} sm={6}>
-                    <Statistic 
-                      title="Total Créditos" 
+                    <Statistic
+                      title="Total Créditos"
                       value={formatCurrency(financialData.summary?.totalCredits || 0)}
                       valueStyle={{ color: '#52c41a' }}
                     />
                   </Col>
                   <Col xs={24} sm={6}>
-                    <Statistic 
-                      title="Total Débitos" 
+                    <Statistic
+                      title="Total Débitos"
                       value={formatCurrency(financialData.summary?.totalDebits || 0)}
                       valueStyle={{ color: '#ff4d4f' }}
                     />
                   </Col>
                   <Col xs={24} sm={6}>
-                    <Statistic 
-                      title="Saldo" 
+                    <Statistic
+                      title="Saldo"
                       value={formatCurrency(financialData.summary?.balance || 0)}
-                      valueStyle={{ 
-                        color: (financialData.summary?.balance || 0) >= 0 ? '#52c41a' : '#ff4d4f' 
+                      valueStyle={{
+                        color: (financialData.summary?.balance || 0) >= 0 ? '#52c41a' : '#ff4d4f'
                       }}
                     />
                   </Col>
@@ -972,33 +1009,33 @@ export default function Reports() {
         </TabPane>
 
         {/* Relatório de Viagens */}
-        <TabPane 
+        <TabPane
           tab={
             <span>
               <CompassOutlined />
               Viagens
             </span>
-          } 
+          }
           key="trips"
         >
           <Card>
             <div style={{ marginBottom: '16px' }}>
               <Space>
-                <Button 
-                  type="primary" 
+                <Button
+                  type="primary"
                   icon={<EyeOutlined />}
                   onClick={loadTripsReport}
                   loading={loading}
                 >
                   Gerar Relatório
                 </Button>
-                <Button 
+                <Button
                   icon={<DownloadOutlined />}
                   onClick={() => exportReport('pdf', 'viagens')}
                 >
                   Exportar PDF
                 </Button>
-                <Button 
+                <Button
                   icon={<DownloadOutlined />}
                   onClick={() => exportReport('excel', 'viagens')}
                 >
@@ -1014,15 +1051,15 @@ export default function Reports() {
                     <Statistic title="Total" value={tripsData.summary?.total || 0} />
                   </Col>
                   <Col xs={24} sm={8}>
-                    <Statistic 
-                      title="Total Despesas" 
+                    <Statistic
+                      title="Total Despesas"
                       value={formatCurrency(tripsData.summary?.totalExpenses || 0)}
                       valueStyle={{ color: '#ff4d4f' }}
                     />
                   </Col>
                   <Col xs={24} sm={8}>
-                    <Statistic 
-                      title="Por Status" 
+                    <Statistic
+                      title="Por Status"
                       value={Object.keys(tripsData.summary?.byStatus || {}).length}
                       suffix="status"
                     />

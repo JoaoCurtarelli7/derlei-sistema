@@ -39,8 +39,8 @@ export default function VehicleMaintenanceModal({
         }
         form.resetFields()
       })
-      .catch((info) => {
-        console.log('Validate Failed:', info)
+      .catch(() => {
+        // validação falhou
       })
   }
 

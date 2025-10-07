@@ -18,7 +18,6 @@ export default function VehicleMaintenanceList() {
   const fetchMaintenance = useCallback(async () => {
     try {
       const response = await api.get(`/trucks/${id}/maintenances`);
-      console.log('API response ->', response.data);
   
       // backend responde { maintenances }
       const arr = Array.isArray(response.data.maintenances)
