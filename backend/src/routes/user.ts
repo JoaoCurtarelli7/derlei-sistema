@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify'
 import { prisma } from '../lib/prisma'
 import { hash, compare } from 'bcryptjs'
 import { z } from 'zod'
-import { authenticate } from '../middlewares/authMiddleware'
+import { authenticate, authorize } from '../middlewares/authMiddleware'
 
 export async function userRoutes(app: FastifyInstance) {
   // Aplicar autenticação em todas as rotas
@@ -19,6 +19,8 @@ export async function userRoutes(app: FastifyInstance) {
           id: true,
           name: true,
           email: true,
+          role: true,
+          permissions: true,
           phone: true,
           address: true,
           createdAt: true
@@ -29,7 +31,12 @@ export async function userRoutes(app: FastifyInstance) {
         return reply.status(404).send({ message: 'Usuário não encontrado' })
       }
 
-      return reply.send(user)
+      const safeUser: any = { ...user }
+      if (typeof safeUser.permissions === 'string') {
+        try { safeUser.permissions = JSON.parse(safeUser.permissions) } catch { safeUser.permissions = [] }
+      }
+
+      return reply.send(safeUser)
     } catch (error) {
       console.error('Erro ao buscar usuário:', error)
       return reply.status(500).send({ message: 'Erro interno do servidor' })
@@ -96,6 +103,43 @@ export async function userRoutes(app: FastifyInstance) {
       console.error('Erro ao atualizar usuário:', error)
       return reply.status(500).send({ message: 'Erro interno do servidor' })
     }
+  })
+
+  // ADMIN: listar usuários
+  app.get('/admin/users', { preHandler: [authorize(['admin'])] }, async (request, reply) => {
+    const users = await prisma.user.findMany({
+      select: { id: true, name: true, email: true, role: true, permissions: true, createdAt: true }
+    })
+    const normalized = users.map((u: any) => ({
+      ...u,
+      permissions: typeof u.permissions === 'string' ? (JSON.parse(u.permissions || '[]')) : (u.permissions || [])
+    }))
+    return reply.send(normalized)
+  })
+
+  // ADMIN: atualizar role e/ou permissions
+  app.patch('/admin/users/:id', { preHandler: [authorize(['admin'])] }, async (request, reply) => {
+    const paramsSchema = z.object({ id: z.string() })
+    const bodySchema = z.object({
+      role: z.enum(['admin','user']).optional(),
+      permissions: z.array(z.string()).optional()
+    })
+    const { id } = paramsSchema.parse(request.params)
+    const data = bodySchema.parse(request.body)
+
+    const updated = await prisma.user.update({
+      where: { id: Number(id) },
+      data: {
+        role: data.role,
+        permissions: data.permissions ? JSON.stringify(data.permissions) : undefined
+      },
+      select: { id: true, name: true, email: true, role: true, permissions: true }
+    })
+    const safe: any = { ...updated }
+    if (typeof safe.permissions === 'string') {
+      try { safe.permissions = JSON.parse(safe.permissions) } catch { safe.permissions = [] }
+    }
+    return reply.send(safe)
   })
 
   // Alterar senha do usuário logado

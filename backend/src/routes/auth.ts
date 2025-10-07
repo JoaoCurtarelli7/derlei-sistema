@@ -16,9 +16,10 @@ export async function authRoutes(app: FastifyInstance) {
       name: z.string(),
       email: z.string().email(),
       password: z.string().min(6),
+      role: z.enum(["admin", "user"]).optional().default("user"),
     });
 
-    const { name, email, password } = bodySchema.parse(req.body);
+    const { name, email, password, role } = bodySchema.parse(req.body);
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
@@ -28,7 +29,7 @@ export async function authRoutes(app: FastifyInstance) {
     const hashedPassword = await hashPassword(password);
 
     await prisma.user.create({
-      data: { name, email, password: hashedPassword },
+      data: { name, email, password: hashedPassword, role, permissions: '[]' },
     });
 
     return rep.code(201).send({ message: "Usuário criado com sucesso!" });
@@ -50,14 +51,15 @@ export async function authRoutes(app: FastifyInstance) {
         return rep.status(401).send({ message: "Email ou senha inválidos" });
       }
 
-      const token = jwt.sign({ userId: user.id }, "secreta-chave", { expiresIn: "1h" });
+      const token = jwt.sign({ userId: user.id, role: user.role }, "secreta-chave", { expiresIn: "1h" });
 
       return rep.send({ 
         token,
         user: {
           id: user.id,
           name: user.name,
-          email: user.email
+          email: user.email,
+          role: user.role
         }
       });
     } catch (error) {

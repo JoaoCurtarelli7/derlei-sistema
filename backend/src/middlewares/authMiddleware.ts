@@ -2,7 +2,7 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import jwt from "jsonwebtoken";
 
 interface AuthenticatedRequest extends FastifyRequest {
-  user?: { id: number };
+  user?: { id: number; role: string };
 }
 
 async function authenticate(req: AuthenticatedRequest, rep: FastifyReply) {
@@ -15,11 +15,19 @@ async function authenticate(req: AuthenticatedRequest, rep: FastifyReply) {
 
     const token = authHeader.split(" ")[1];
     const decoded: any = jwt.verify(token, "secreta-chave");
-
-    req.user = { id: decoded.userId }; 
+    req.user = { id: decoded.userId, role: decoded.role || 'user' }; 
   } catch (error) {
     return rep.code(401).send({ message: "Token inválido ou expirado" });
   }
 }
 
 export { authenticate };
+
+// Middleware de autorização por papel
+export function authorize(roles: string[]) {
+  return async (req: AuthenticatedRequest, rep: FastifyReply) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      return rep.code(403).send({ message: 'Acesso negado' })
+    }
+  }
+}

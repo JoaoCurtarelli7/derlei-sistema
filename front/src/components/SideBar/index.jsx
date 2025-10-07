@@ -13,14 +13,14 @@ import { useUserContext } from '../../context/userContext'
 import './styles.css'
 
 export default function AppSidebar() {
-  const { user: userContext, logout } = useUserContext()
+  const { user: userContext, canAccess, isAdmin, logout } = useUserContext()
   const location = useLocation()
 
   const handleLogout = () => {
     logout()
   }
 
-  const menuItems = [
+  const allItems = [
     {
       key: '/',
       icon: <HomeOutlined />,
@@ -69,8 +69,41 @@ export default function AppSidebar() {
       key: '/reports',
       icon: <PrinterOutlined />,
       label: <Link to="/reports">Relatórios</Link>
+    },
+    isAdmin && {
+      key: '/admin/users',
+      icon: <UserOutlined />,
+      label: <Link to="/admin/users">Gestão de Usuários</Link>
     }
   ]
+
+  const screenMap = {
+    '/': 'dashboard',
+    '/closings': 'closings',
+    '/employee': 'employees',
+    '/companies': 'companies',
+    '/load': 'loads',
+    '/vehicle-maintenance': 'vehicles',
+    '/reports': 'reports'
+  }
+
+  const filterItems = (items) => {
+    return items
+      .map(item => {
+        if (!item) return null
+        if (item.children) {
+          const children = filterItems(item.children)
+          if (children.length === 0) return null
+          return { ...item, children }
+        }
+        const screen = screenMap[item.key]
+        if (!screen) return item
+        return (isAdmin || canAccess(screen)) ? item : null
+      })
+      .filter(Boolean)
+  }
+
+  const menuItems = filterItems(allItems)
 
 
   return (

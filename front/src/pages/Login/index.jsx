@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
-import { Card, Tabs, Button, Input, Form, Typography, message } from "antd";
+import { Card, Tabs, Button, Input, Form, Typography, message, Select } from "antd";
 import {
   UserOutlined,
   LockOutlined,
@@ -15,6 +15,7 @@ import "./styles.css";
 import loginImage from "../../components/assets/login.jpg";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../lib";
+import { useUserContext } from "../../context/userContext";
 
 const { Title, Text } = Typography;
 
@@ -25,6 +26,7 @@ export default function LoginAndRegister() {
   const [activeTab, setActiveTab] = useState("1");
   const [passwordStrength, setPasswordStrength] = useState(0);
   const navigate = useNavigate();
+  const { setUser, refreshUser } = useUserContext();
 
   const tabsRef = useRef(null);
 
@@ -72,6 +74,11 @@ export default function LoginAndRegister() {
     try {
       const res = await api.post('/login', values);
       localStorage.setItem('token', res.data.token);
+      if (res.data?.user) {
+        setUser(res.data.user);
+      } else {
+        await refreshUser();
+      }
       message.success({
         content: 'Login realizado com sucesso! Bem-vindo de volta! 🎉',
         icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
@@ -391,6 +398,17 @@ export default function LoginAndRegister() {
                             visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
                           }
                         />
+                      </Form.Item>
+                      <Form.Item
+                        name="role"
+                        label="Tipo de Usuário"
+                        rules={[{ required: true, message: 'Selecione o tipo de usuário' }]}
+                        initialValue="user"
+                      >
+                        <Select size="large">
+                          <Select.Option value="user">Usuário</Select.Option>
+                          <Select.Option value="admin">Administrador</Select.Option>
+                        </Select>
                       </Form.Item>
                       
                       <Form.Item>

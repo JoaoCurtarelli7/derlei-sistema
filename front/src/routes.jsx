@@ -10,12 +10,18 @@ import EmployeeDetails from './pages/Employee/Details'
 import VehicleList from './pages/Vehicle'
 import VehicleMaintenance from './pages/Vehicle/Maintenance'
 import Login from './pages/Login'
+import AdminUsersPage from './pages/Admin/Users'
 import UserProfile from './pages/UserProfile'
 import TripList from './pages/Vehicle/Trip'
 import Closings from './pages/Closings'
 import TripExpenses from './pages/Vehicle/TripExpenses'
 import Reports from './pages/Reports'
-import { UserProvider } from './context/userContext'
+import { UserProvider, useUserContext } from './context/userContext'
+
+const AdminGuard = ({ element }) => {
+  const { isAdmin } = useUserContext()
+  return isAdmin ? element : <Home />
+}
 
 const router = createBrowserRouter([
   {
@@ -38,6 +44,7 @@ const router = createBrowserRouter([
       { path: '/vehicle-trip/:id', element: <TripList /> },
       { path: '/vehicle/trip-expenses/:id', element: <TripExpenses /> },
       { path: '/reports', element: <Reports /> },
+      { path: '/admin/users', element: <AdminGuard element={<AdminUsersPage />} /> },
     ],
   },
 ])

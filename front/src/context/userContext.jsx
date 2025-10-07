@@ -98,8 +98,17 @@ export const UserProvider = ({ children, navigate }) => {
     return () => clearInterval(interval)
   }, [user])
 
+  const canAccess = (screenKey) => {
+    if (!user) return false
+    if (user.role === 'admin') return true
+    const list = Array.isArray(user.permissions) ? user.permissions : []
+    return list.includes(screenKey)
+  }
+
   const contextValue = {
     user,
+    isAdmin: !!user && user.role === 'admin',
+    canAccess,
     setUser,
     loading,
     error,
